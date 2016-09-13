@@ -566,6 +566,7 @@ void main_irq(BRD_Handle hReg)
 		status = BRD_ctrl(hReg, 0, BRDctrl_REG_WRITEIND, &regdata);
 
 	}
+	BRDC_printf(_BRDC("\n"));
 
 	status = BRD_ctrl(hReg, 0, BRDctrl_REG_CLEARSTATIRQ, &irqdata);
 
