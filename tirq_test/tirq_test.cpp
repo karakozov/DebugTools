@@ -57,7 +57,7 @@ int DEV_close(BRD_Handle hDEV);
 // открыть службу
 BRD_Handle SRV_open(BRD_Handle hDEV, BRDCHAR* srvname, U32* mode);
 // закрыть службу
-int SRV_close(BRD_Handle hSRV);
+int SRV_close(BRD_Handle hSrv);
 // запись в косвенный регистр
 S32 RegWriteInd(BRD_Handle handle, S32 tetrNum, S32 regNum, U32 valNum);
 // чтение косвенного регистра
@@ -66,7 +66,7 @@ S32 RegReadInd(BRD_Handle handle, S32 tetrNum, S32 regNum, U32& valNum);
 S32 RegReadDir(BRD_Handle handle, S32 tetrNum, S32 regNum, ULONG& valNum);
 
 // получить и отобразить информацию о тетрадах
-void tetr_info(BRD_Handle handle);
+void tetr_info(BRD_Handle hReg);
 // прерывания от бита завершения сбора тетрады SDRAM
 // необходимо предварительно запустить программу, которая бы выполнила подготовку АЦП и памяти к сбору данных
 void sdram_irq(BRD_Handle hReg);
@@ -530,7 +530,7 @@ void main_irq(BRD_Handle hReg)
 	int num = 100;
 	for (int i = 0; i<num; i++)
 	{
-		IPC_delay(200);
+		IPC_delay(500);
 
 		// Enable IRQ 
 		regdata.reg = 0; // MODE0
@@ -568,7 +568,7 @@ void main_irq(BRD_Handle hReg)
 	}
 	BRDC_printf(_BRDC("\n"));
 
-	status = BRD_ctrl(hReg, 0, BRDctrl_REG_CLEARSTATIRQ, &irqdata);
+	status = BRD_ctrl(hReg, 0, BRDctrl_REG_CLEARSTATIRQ, &irqdata.tetr);
 
 #ifdef _WIN32
 	CloseHandle(hEvent);
