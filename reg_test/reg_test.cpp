@@ -63,21 +63,36 @@ void reg_test::updateDeviceInfo()
 	BRD_Info	info;
 	info.size = sizeof(info);
 	BRD_getInfo(g_lidList.pLID[iDev], &info); // получить информацию об устройстве
+
+	ULONG* host_vadr = NULL;
+	memcpy(&host_vadr, &info.base[6], sizeof(void*));
+	U16 pld_ver = host_vadr[4 * 2];
+	U16 core_mod = host_vadr[6 * 2];
+	U16 core_id = host_vadr[7 * 2];
+	U16 blk_cnt = host_vadr[5 * 2] - 1;
+	U16 dma_ver = 0;
+	for (U16 iBlk = 1; iBlk < blk_cnt; iBlk++)
+	{
+		U16 val = host_vadr[iBlk * 64];
+		if (0x1018 == val)
+			{	dma_ver = host_vadr[1 * 2 + iBlk * 64]; break;	}
+	}
+
 	QString strBrdInfo;
 #ifdef _WIN64
 	if ((info.boardType >> 16) == 0x53B1) // FMC115cP
-		strBrdInfo.sprintf("<font color=green><b>%ls</b> (0x%X, 0x%X): G.adr = %d, Order = %d, PID = %lu, Bus = %d, Dev = %d</font>",
-			info.name, info.boardType >> 16, info.boardType & 0xff, info.slot & 0xffff, info.pid >> 28, info.pid & 0xfffffff, info.bus, info.dev);
+		strBrdInfo.sprintf("<font color=green><b>%ls</b> (0x%X, 0x%X): G.adr %d, Order %d, Host PLD %d.%d CoreID 0x%X CoreMOD 0x%0X DMA %d.%02d</font>",
+			info.name, info.boardType >> 16, info.boardType & 0xff, info.slot & 0xffff, pld_ver >> 8, pld_ver & 0xff, core_id, core_mod, (dma_ver & 0xFFFF) >> 8, dma_ver & 0xff);
 	else
-		strBrdInfo.sprintf("<font color=green><b>%ls</b>: DevID = 0x%X, Rev = 0x%X, PID = %lu, Bus = %d, Dev = %d</font>",
-			info.name, info.boardType >> 16, info.boardType & 0xff, info.pid, info.bus, info.dev);
+		strBrdInfo.sprintf("<font color=green><b>%ls</b> (0x%X, 0x%X): Host PLD %d.%d, CoreID 0x%X, CoreMOD 0x%0X DMA %d.%02d</font>",
+			info.name, info.boardType >> 16, info.boardType & 0xff, pld_ver >> 8, pld_ver & 0xff, core_id, core_mod, (dma_ver & 0xFFFF) >> 8, dma_ver & 0xff);
 #else 
 	if ((info.boardType >> 16) == 0x53B1) // FMC115cP
-		strBrdInfo.sprintf("<font color=green><b>%s</b> (0x%X, 0x%X): G.adr = %d, Order = %d, PID = %lu, Bus = %d, Dev = %d</font>",
-			info.name, info.boardType >> 16, info.boardType & 0xff, info.slot & 0xffff, info.pid >> 28, info.pid & 0xfffffff, info.bus, info.dev);
+		strBrdInfo.sprintf("<font color=green><b>%s</b> (0x%X, 0x%X): G.adr %d, Order %d, Host PLD %d.%d CoreID 0x%X CoreMOD 0x%0X DMA %d.%02d</font>",
+			info.name, info.boardType >> 16, info.boardType & 0xff, info.slot & 0xffff, pld_ver >> 8, pld_ver & 0xff, core_id, core_mod, (dma_ver & 0xFFFF) >> 8, dma_ver & 0xff);
 	else
-		strBrdInfo.sprintf("<font color=green><b>%s</b>: DevID = 0x%X, RevID = 0x%X, PID = %lu, Bus = %d, Dev = %d.</font>",
-			info.name, info.boardType >> 16, info.boardType & 0xff, info.pid, info.bus, info.dev);
+		strBrdInfo.sprintf("<font color=green><b>%s</b> (0x%X, 0x%X): Host PLD %d.%d CoreID 0x%X CoreMOD 0x%0X DMA %d.%02d</font>",
+			info.name, info.boardType >> 16, info.boardType & 0xff, pld_ver >> 8, pld_ver & 0xff, core_id, core_mod, (dma_ver & 0xFFFF) >> 8, dma_ver & 0xff);
 #endif
 	board_info->setText(strBrdInfo);
 
@@ -103,6 +118,60 @@ void reg_test::updateDeviceInfo()
 		if (!BRDC_strcmp(pSrvList[iSrv].name, _BRDC("REG0")))
 		{
 			g_hReg = BRD_capture(g_hDevice, 0, &mode, _BRDC("REG0"), 10000); // захватываем службу доступа к регистрам устройства
+			
+			//BRD_Host host;
+
+			//for (U32 iBlk = 0; iBlk < 8; iBlk++)
+			//{
+			//	host.blk = iBlk;
+			//	host.reg = 0;
+			//	status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//	U32 ofBlk = iBlk * 64;
+			//	U16 val = host_vadr[0 + ofBlk];
+			//	val = host.val;
+			//}
+
+			//host.blk = 0;
+			//host.reg = 2;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//U16 dev = host.val;
+			//dev = host_vadr[host.reg * 2 + host.blk * 64];
+
+			//host.reg = 5;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//U16 cnt = host.val;
+			//cnt = host_vadr[host.reg * 2 + host.blk * 64];
+
+			//host.reg = 6;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//U16 core_mod = host.val;
+			//core_mod = host_vadr[host.reg * 2 + host.blk * 64];
+
+			//host.reg = 7;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//U16 core_id = host.val;
+			//core_id = host_vadr[host.reg * 2 + host.blk * 64];
+
+			//host.blk = 4;
+			//host.reg = 2;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//U16 fifoid = host.val;
+			//fifoid = host_vadr[host.reg * 2 + host.blk * 64];
+
+			//host.reg = 3;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//U16 fifonum = host.val;
+			//fifonum = host_vadr[host.reg * 2 + host.blk * 64];
+
+			//host.blk = 5;
+			//host.reg = 2;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//fifoid = host.val;
+
+			//host.reg = 3;
+			//status = BRD_ctrl(g_hReg, 0, BRDctrl_REG_READHOST, &host);
+			//fifonum = host.val;
+
 			break;
 		}
 	}
