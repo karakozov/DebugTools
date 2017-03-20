@@ -1,11 +1,11 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <math.h>
 #include <tchar.h>
 #include "drvfunc.h"
 #include "devfunc.h"
 #include "icr.h"
-
 //***************************************************************************************
 ULONG PCIE_info(ULONG* params)
 {
@@ -716,6 +716,12 @@ void TetradName(ULONG id, TCHAR* str)
         case 0xDB: lstrcpy(str, _T("ADC_212x4GDA")); break;
         case 0xDC: lstrcpy(str, _T("DAC_212x4GDA")); break;
 
+		case 0xE1: lstrcpy(str, _T("CLK_214x1GTRF")); break;
+		case 0xE2: lstrcpy(str, _T("ADC_214x1GTRF")); break;
+		case 0xE5: lstrcpy(str, _T("DDR3_DAC")); break;
+		case 0xE7: lstrcpy(str, _T("DDR4_ADC")); break;
+		case 0xE8: lstrcpy(str, _T("DDR4_DAC")); break;
+
 		default: lstrcpy(str, _T("UNKNOW")); break;
 	}
 }
@@ -764,6 +770,7 @@ void BasemodName(ULONG id, TCHAR* str)
 		case 0x551F:    lstrcpy(str, _T("FMC127P")); break;
 		case 0x5520:    lstrcpy(str, _T("FMC122P-SLAVE")); break;
 		case 0x5521:    lstrcpy(str, _T("FMC111P")); break;
+		case 0x5522:    lstrcpy(str, _T("FMC126P")); break;
 
 		case 0x5514:    lstrcpy(str, _T("AC_SYNC")); break;
 		case 0x5518:    lstrcpy(str, _T("PS_DSP")); break;
@@ -915,69 +922,81 @@ ULONG GetPldDescription(TCHAR* Description, PUCHAR pBaseEEPROMMem, ULONG BaseEEP
 	GetPldCfgICR(pBaseEEPROMMem, BaseEEPROMSize, &cfgPld);
 	//MessageBox(NULL, _T("2", _T("ISDCLASS", MB_OK); 
 	//BRDCHAR buf[256];
-	//_stprintf_s(Description, MAX_STRING_LEN, _BRDC("%d %d %d"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+	//_stprintf_s(Description, MAX_STRING_LEN, _T("%d %d %d"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 	g_pldType = cfgPld.bType;
 	_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: %d %d %d %d"), cfgPld.bType, cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 	switch(cfgPld.bType)
 	{
 	case 3:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XCVE%d-%dFF-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XCVE%d-%dFF-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 		break;
 	case 4:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC2V%d-%dFF-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC2V%d-%dFF-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 		break;
 	case 5:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC2S%d-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC2S%d-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 	case 6:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC2S%dE-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC2S%dE-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 		break;
 	case 7:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC3S%d-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC3S%d-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 		break;
 	case 8:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC4VLX%d-%dFF%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC4VLX%d-%dFF%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 9:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC4VSX%d-%dFF%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC4VSX%d-%dFF%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 10:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC4VFX%d-%dFF%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC4VFX%d-%dFF%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 11:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC3S%dE-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC3S%dE-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 		break;
 	case 12:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC3S%dA-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC3S%dA-FG%d-%dC"), cfgPld.wVolume, cfgPld.wPins, cfgPld.bSpeedGrade);
 		break;
 	case 15:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC5VLX%d-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC5VLX%d-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 16:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC5VSX%d-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC5VSX%d-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 17:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC5VFX%d-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC5VFX%d-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 18:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC5VLX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC5VLX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 19:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC5VSX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC5VSX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 20:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC5VFX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC5VFX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 21:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC6VSX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC6VSX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 22:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC6VLX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC6VLX%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 23:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC7K%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC7K%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	case 24:
-		_stprintf_s(Description, MAX_STRING_LEN, _BRDC("Chip: XC7A%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XC7A%dT-%dFFG%dC"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		break;
+	case 25:
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XCKU%d-%dFFVA%dE"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		break;
+	case 26:
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XCKU%dP-%dFFVA%dE"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		break;
+	case 27:
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XCVU%d-%dFFVA%dE"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
+		break;
+	case 28:
+		_stprintf_s(Description, MAX_STRING_LEN, _T("Chip: XCVU%dP-%dFFVA%dE"), cfgPld.wVolume, cfgPld.bSpeedGrade, cfgPld.wPins);
 		break;
 	}
 	return 1;
@@ -990,12 +1009,16 @@ ULONG DmaChannelTest(int tetrNum, int width)
 {	
 	ULONG status = 0;
 	int dmaChan = 0; // номер канала DMA
+	_TCHAR err_msg[128];
+	int fl_err = 0;
 
 	int chan_state;
 	ULONG blockNum;
 	status = StateDma( 0, dmaChan, chan_state, blockNum);
 	if(status)
 	{
+		_stprintf(err_msg, _T("StateDma (channel%d status = 0x%0X): ERROR !!!"), dmaChan, status);
+		MessageBox(NULL, err_msg, _T("ISDCLASS"), MB_OK);
 		printf("StateDma: ERROR !!!\n");
 		return status;
 	}
@@ -1007,12 +1030,14 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		status = StateDma( 0, dmaChan, chan_state, blockNum);
 		if(status)
 		{
+			_stprintf(err_msg, _T("StateDma (channel%d status = 0x%0X): ERROR !!!"), dmaChan, status);
+			MessageBox(NULL, err_msg, _T("ISDCLASS"), MB_OK);
 			printf("StateDma: ERROR !!!\n");
 			return status;
 		}
 		if(3 != chan_state)
 		{
-			MessageBox(NULL, _BRDC("All DMA Channels are busy already!!!"), _BRDC("ISDCLASS"), MB_OK); 
+			MessageBox(NULL, _T("All DMA Channels are busy already!!!"), _T("ISDCLASS"), MB_OK); 
 			//printf("StateDma: DMA Channel %d is busy already!!!\n", dmaChan);
 			return status;
 		}
@@ -1063,25 +1088,25 @@ ULONG DmaChannelTest(int tetrNum, int width)
 	status = AllocMemory(&pBuf, blkSize, blkNum, isSysMem, dir, addr, dmaChan);
 	if(status)
 		//printf("AllocMemory: ERROR !!!\n");
-		MessageBox(NULL, _BRDC("Allocate memory is ERROR!!!"), _BRDC("ISDCLASS"), MB_OK); 
+		MessageBox(NULL, _T("Allocate memory is ERROR!!!"), _T("ISDCLASS"), MB_OK); 
 	else
 	{
 		printf("Memory is Allocated!!!  (%d block)\n", blkNum);
 		PULONG* pBufferZ = (PULONG*)pBuf;
 
-//		if(extdma_sup)
-//			SetIrqMode(1, dmaChan);
+		//		if(extdma_sup)
+		//			SetIrqMode(1, dmaChan);
 
-		// заполняю выделенные буфера нулями
-		//printf("Zeroing Memory...!!!\r"));
-		for(ULONG iBlock = 0; iBlock < blkNum; iBlock++)
+				// заполняю выделенные буфера нулями
+				//printf("Zeroing Memory...!!!\r"));
+		for (ULONG iBlock = 0; iBlock < blkNum; iBlock++)
 		{
 			//for(ULONG i = 0; i < blkSize/4; i++)
-			for(ULONG i = 0; i < 32; i++)
+			for (ULONG i = 0; i < 32; i++)
 				pBufferZ[iBlock][i] = i;
 		}
 
-		if(tetrNum == 6) // DIO_IN
+		if (tetrNum == 6) // DIO_IN
 		{
 			regVal = 0x1;
 			status = WriteRegData(0, 1, 0x1e, regVal); // TEST_CTLR:GEN_CTRL - сброс узла формирования тестовой последовательности
@@ -1090,10 +1115,10 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		}
 		regVal = 2; // FIFO_RESET
 		status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
-		Sleep( 1 );
+		Sleep(1);
 		regVal = 0;
 		status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
-		Sleep( 1 );
+		Sleep(1);
 		status = ResetDmaFifo(dmaChan);
 		status = StartDma(0, dmaChan); // без зацикливания
 		//if(status && (status != ERROR_IO_PENDING))
@@ -1103,7 +1128,7 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		//status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
 		regVal = 0x2038; // HF, START, MASTER, DRQ_EN
 		status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
-		if(tetrNum == 6) // DIO_IN
+		if (tetrNum == 6) // DIO_IN
 		{
 			regVal = 0x6A0;
 			status = WriteRegData(0, 1, 0x1e, regVal); // TEST_CTLR:GEN_CTRL - старт узла формирования тестовой последовательности
@@ -1122,10 +1147,12 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		//	}
 		//}
 		//else		
-			status = WaitBuffer(10000, dmaChan); // time-out 10 сек (если 0xFFFFFFFF - бесконечное ожидание)
-		if(status == TIMEOUT_ERROR) 
+		status = WaitBuffer(10000, dmaChan); // time-out 10 сек (если 0xFFFFFFFF - бесконечное ожидание)
+		if (status == TIMEOUT_ERROR)
 		{
+			MessageBox(NULL, _T("TIMEOUT ERROR !!!"), _T("ISDCLASS"), MB_OK);
 			printf("TIMEOUT ERROR !!!\n");
+			fl_err = 1;
 		}
 		//printf("WaitBuffer: Success !!!\n"));
 		status = StopDma(dmaChan);
@@ -1135,87 +1162,89 @@ ULONG DmaChannelTest(int tetrNum, int width)
 //		if(extdma_sup)
 //			SetIrqMode(0, dmaChan);
 
-		// контроль тестовой последовательности
-		__int64 cnt_err = 0;
-		__int64** pBuffer = (__int64**)pBuf;
-		__int64 data_rd;
-		if(tetrNum == 6) // DIO_IN
+		if (!fl_err)
 		{
-			__int64 data_wr = 0x00000000A5A50123;
-			for(ULONG iBlock = 0; iBlock < blkNum; iBlock++)
+			// контроль тестовой последовательности
+			__int64 cnt_err = 0;
+			__int64** pBuffer = (__int64**)pBuf;
+			__int64 data_rd;
+			if (tetrNum == 6) // DIO_IN
 			{
-				data_rd = pBuffer[iBlock][0];
-				if(data_wr != data_rd)
+				__int64 data_wr = 0x00000000A5A50123;
+				for (ULONG iBlock = 0; iBlock < blkNum; iBlock++)
 				{
-					cnt_err++;
-					if(cnt_err < 10)
-						_tprintf(_BRDC("Error (%d): wr %016I64X : rd %016I64X\n"),
-											iBlock, data_wr, data_rd);
-				}
-				data_wr = ((__int64)iBlock+1) << 40 | 0xA5A50123;
-			}
-		}
-		else
-		{
-			__int64 data_wr = 2;
-			__int64 data_wrh = 0xAA55;
-			for(ULONG iBlock = 0; iBlock < blkNum; iBlock++)
-			{
-				for(ULONG i = 0; i < blkSize/8; i++)
-				{
-					data_rd = pBuffer[iBlock][i];
-					if(data_wr != data_rd)
+					data_rd = pBuffer[iBlock][0];
+					if (data_wr != data_rd)
 					{
 						cnt_err++;
-						if(cnt_err < 10)
-							_tprintf(_BRDC("Error (%d, %d): wr %016I64X: rd %016I64X\n"),
-												i, iBlock, data_wr, data_rd);
-						data_wr = data_rd;
+						if (cnt_err < 10)
+							_tprintf(_T("Error (%d): wr %016I64X : rd %016I64X\n"),
+								iBlock, data_wr, data_rd);
 					}
-					ULONG data_h = ULONG(data_wr>>32);
-					ULONG f63 = data_h >> 31;
-					ULONG f62 = data_h >> 30;
-					ULONG f60 = data_h >> 28;
-					ULONG f59 = data_h >> 27;
-					ULONG f0 = (f63 ^ f62 ^ f60 ^ f59)&1;
-
-					data_wr <<= 1;
-					data_wr &= ~1;
-					data_wr |=f0;
-					
-					if(width)
+					data_wr = ((__int64)iBlock + 1) << 40 | 0xA5A50123;
+				}
+			}
+			else
+			{
+				__int64 data_wr = 2;
+				__int64 data_wrh = 0xAA55;
+				for (ULONG iBlock = 0; iBlock < blkNum; iBlock++)
+				{
+					for (ULONG i = 0; i < blkSize / 8; i++)
 					{
-						data_rd = pBuffer[iBlock][i+1];
-						if(data_wrh != data_rd)
+						data_rd = pBuffer[iBlock][i];
+						if (data_wr != data_rd)
 						{
 							cnt_err++;
-							if(cnt_err < 10)
-								_tprintf(_BRDC("Error (%d, %d): wr %016I64X: rd %016I64X\n"),
-													i, iBlock, data_wrh, data_rd);
-							data_wrh = data_rd;
+							if (cnt_err < 10)
+								_tprintf(_T("Error (%d, %d): wr %016I64X: rd %016I64X\n"),
+									i, iBlock, data_wr, data_rd);
+							data_wr = data_rd;
 						}
-						ULONG data_h = ULONG(data_wrh>>32);
+						ULONG data_h = ULONG(data_wr >> 32);
 						ULONG f63 = data_h >> 31;
 						ULONG f62 = data_h >> 30;
 						ULONG f60 = data_h >> 28;
 						ULONG f59 = data_h >> 27;
-						ULONG f0 = (f63 ^ f62 ^ f60 ^ f59)&1;
+						ULONG f0 = (f63 ^ f62 ^ f60 ^ f59) & 1;
 
-						data_wrh <<= 1;
-						data_wrh &= ~1;
-						data_wrh |=f0;
-						i++;
+						data_wr <<= 1;
+						data_wr &= ~1;
+						data_wr |= f0;
+
+						if (width)
+						{
+							data_rd = pBuffer[iBlock][i + 1];
+							if (data_wrh != data_rd)
+							{
+								cnt_err++;
+								if (cnt_err < 10)
+									_tprintf(_T("Error (%d, %d): wr %016I64X: rd %016I64X\n"),
+										i, iBlock, data_wrh, data_rd);
+								data_wrh = data_rd;
+							}
+							ULONG data_h = ULONG(data_wrh >> 32);
+							ULONG f63 = data_h >> 31;
+							ULONG f62 = data_h >> 30;
+							ULONG f60 = data_h >> 28;
+							ULONG f59 = data_h >> 27;
+							ULONG f0 = (f63 ^ f62 ^ f60 ^ f59) & 1;
+
+							data_wrh <<= 1;
+							data_wrh &= ~1;
+							data_wrh |= f0;
+							i++;
+						}
 					}
 				}
 			}
+			if (cnt_err)
+				MessageBox(NULL, _T("MAIN tetrad test is ERROR!!!"), _T("ISDCLASS"), MB_OK);
+			else
+				MessageBox(NULL, _T("MAIN tetrad test is SUCCESS!!!"), _T("ISDCLASS"), MB_OK);
+			status = FreeMemory(dmaChan);
 		}
-		if(cnt_err)
-			MessageBox(NULL, _BRDC("MAIN tetrad test is ERROR!!!"), _BRDC("ISDCLASS"), MB_OK); 
-		else
-			MessageBox(NULL, _BRDC("MAIN tetrad test is SUCCESS!!!"), _BRDC("ISDCLASS"), MB_OK); 
-		status = FreeMemory(dmaChan);
 	}
-	
 	return status;
 }
 
@@ -1242,6 +1271,7 @@ typedef enum _SDRAM_MEMTYPE {
 	SDRAMmt_DDR =	0x07,
 	SDRAMmt_DDR2 =	0x08,
 	SDRAMmt_DDR3 =	0x0B,
+	SDRAMmt_DDR4 =	0x0C,
 } SDRAM_MEMTYPE;
 
 // Numbers of Command Registers
@@ -1272,6 +1302,24 @@ typedef enum _DDR3_NUM_SPD_BYTES {
 	DDR3spd_CASLATMIN	= 16,	// Minimum CAS Latency Time
 } DDR3_NUM_SPD_BYTES;
 
+// Numbers of Command Registers
+typedef enum _DDR4_NUM_SPD_BYTES {
+	DDR4spd_MEMTYPE = 2,	// DRAM Device Type: 0С - DDR SDRAM
+	DDR4spd_CHIPBANKS = 4,	// SDRAM Density and Banks: Bits 6~4 - Bank Address, Bits 3~0 - Total SDRAM capacity, in megabits
+	DDR4spd_ROWCOLADDR = 5,	// SDRAM Addressing: Bits 5~3 - Row Address (12-16), Bits 2~0 - Column Address (9-12)
+	DDR4spd_MODBANKS = 12,	// Module Organization: Bits 5~3 - Number of Ranks, Bits 2~0 - SDRAM Device width
+	DDR4spd_WIDTH = 13,	// Module Memory Bus Width: Bits 2~0 - Primary bus width
+	DDR4spd_TIMEBASES = 17,	// Timebases (MTB - Medium Timebase and FTB - Fine Timebase)
+	DDR4spd_CYCLETIME = 18,	// SDRAM Minimum Cycle Time (tCKAVGmin)
+	DDR4spd_CASLAT0 = 20,	// CAS Latencies Supported, First Byte
+	DDR4spd_CASLAT1 = 21,	// CAS Latencies Supported, Second Byte
+	DDR4spd_CASLAT2 = 22,	// CAS Latencies Supported, Third Byte
+	DDR4spd_CASLAT3 = 23,	// CAS Latencies Supported, Fourth Byte
+	DDR4spd_CASLATMIN = 24,	// Minimum CAS Latency Time (tAAmin)
+	DDR4spd_CASLMFINE = 123, // Fine Offset for Minimum CAS Latency Time (tAAmin)
+	DDR4spd_CYCLTMFINE = 125, // Fine Offset for SDRAM Minimum Cycle Time(tCKAVGmin)
+} DDR4_NUM_SPD_BYTES;
+
 //***************************************************************************************
 long GetMemTetrNum(ULONG& valueID)
 {
@@ -1282,7 +1330,15 @@ long GetMemTetrNum(ULONG& valueID)
 	for(iTetr = 0; iTetr < MAX_TETRNUM; iTetr++)
 	{
 		status = ReadRegData(0, iTetr, ADM2IFnr_ID, valueID);
-		if((valueID == 0x70) || (valueID == 0x6F) || (valueID == 0x77) || (valueID == 0x8F) || (valueID == 0x9B) || (valueID == 0xA5))
+		if((valueID == 0x70) ||			// SDRAM_PEX5
+			(valueID == 0x6F) ||		// SDRAM_PEX2
+			(valueID == 0x77) ||		// SDRAM_PEX2_OUT
+			(valueID == 0x8F) ||		// SDRAM_106P
+			(valueID == 0xA5) ||		// DDR3_TST
+			(valueID == 0x9B) ||		// SDRAM_DDR3X
+			(valueID == 0xE5) ||		// DDR3_DAC
+			(valueID == 0xE7) ||		// DDR4_ADC
+			(valueID == 0xE8))			// DDR4_DAC
 			break;
 	}
 	return iTetr;
@@ -1297,6 +1353,17 @@ UCHAR ReadSpdByte(long TetrNum, ULONG OffsetSPD, ULONG CtrlSPD)
 	ULONG val = 0;
 	status = ReadRegData(0, TetrNum, 0x206, val);//SDRAMnr_SPDDATAL;
 	return (UCHAR)val;
+}
+
+//***************************************************************************************
+USHORT ReadSpdWord(long TetrNum, ULONG OffsetSPD, ULONG CtrlSPD)
+{
+	ULONG status = 0;
+	status = WriteRegData(0, TetrNum, 0x205, OffsetSPD); //SDRAMnr_SPDADDR;
+	status = WriteRegData(0, TetrNum, 0x204, CtrlSPD);//SDRAMnr_SPDCTRL;
+	ULONG val = 0;
+	status = ReadRegData(0, TetrNum, 0x206, val);//SDRAMnr_SPDDATAL;
+	return (USHORT)val;
 }
 
 //***************************************************************************************
@@ -1319,9 +1386,135 @@ void MemoryManufacturer(unsigned __int64 id, TCHAR* str)
 		case 0x0000000000000098:    lstrcpy(str, _T("Kingston")); break;
 		case 0x000000000000004F:    lstrcpy(str, _T("Transcend")); break;
 		case 0x0000000000000051:    lstrcpy(str, _T("Qimonda")); break;
+
+		case 0x0000000000001635:    lstrcpy(str, _T("Kingston")); break; // DDR4
+
 		default: lstrcpy(str, _T("InSys")); break;
 	}
 }
+
+//***************************************************************************************
+//ULONG Ddr4Bit16(long MemTetrNum, TCHAR* strMemType)
+//{
+//	SDRAM_SPDCTRL SpdCtrl;
+//	SpdCtrl.AsWhole = 0;
+//	SpdCtrl.ByBits.Read = 1;
+//
+//	UCHAR mem_type[SDRAM_MAXSLOTS];
+//	SpdCtrl.ByBits.Slot = 0;
+//	USHORT spd_val = ReadSpdWord(MemTetrNum, 1, SpdCtrl.AsWhole);
+//	mem_type[0] = (UCHAR)spd_val;
+//	mem_type[1] = 0;
+//
+//	int ModuleCnt = 0;
+//	for (int i = 0; i < SDRAM_MAXSLOTS; i++)
+//		if (mem_type[i] == SDRAMmt_DDR4)
+//			ModuleCnt++;
+//	if (!ModuleCnt)
+//		return 0;
+//
+//	ULONG Status = 0;
+//	UCHAR val;
+//	UCHAR row_addr[SDRAM_MAXSLOTS], col_addr[SDRAM_MAXSLOTS], module_banks[SDRAM_MAXSLOTS], module_width[SDRAM_MAXSLOTS],
+//		chip_width[SDRAM_MAXSLOTS], chip_banks[SDRAM_MAXSLOTS], cycle_time[SDRAM_MAXSLOTS], capacity[SDRAM_MAXSLOTS];
+//	UCHAR mtb_dividend[SDRAM_MAXSLOTS], mtb_divider[SDRAM_MAXSLOTS];
+//	UCHAR mtb[SDRAM_MAXSLOTS], ftb[SDRAM_MAXSLOTS];
+//	unsigned __int64 mem_name[SDRAM_MAXSLOTS] = { 0, 0 };
+//	ULONG cas_lat[SDRAM_MAXSLOTS] = { 0, 0 };
+//	UCHAR cas_lat_min[SDRAM_MAXSLOTS];
+//	double tAAmin[SDRAM_MAXSLOTS], tCKAVGmin[SDRAM_MAXSLOTS];
+//	for (int i = 0; i < ModuleCnt; i++)
+//	{
+//		SpdCtrl.ByBits.Slot = i;
+//
+//		UCHAR spd_byte[512];
+//		USHORT* spd_2byte = (USHORT*)spd_byte;
+//		ULONG* spd_4byte = (ULONG*)spd_byte;
+//		for (int j = 0; j < 256; j++)
+//			spd_2byte[j] = ReadSpdWord(MemTetrNum, j, SpdCtrl.AsWhole);
+//
+//		//UCHAR spd_b[512];
+//		//for (int k = 0; k < 256; k++)
+//		//	spd_b[k] = ReadSpdByte(MemTetrNum, k, SpdCtrl.AsWhole);
+//
+//		if (mem_type[i] == SDRAMmt_DDR4)
+//		{
+//			//val = ReadSpdByte(MemTetrNum, DDR4spd_ROWCOLADDR, SpdCtrl.AsWhole);
+//			val = spd_byte[DDR4spd_ROWCOLADDR];
+//			row_addr[i] = (val >> 3) & 0x7;
+//			col_addr[i] = val & 0x7;
+//			//val = ReadSpdByte(MemTetrNum, DDR4spd_MODBANKS, SpdCtrl.AsWhole);
+//			val = spd_byte[DDR4spd_MODBANKS];
+//			module_banks[i] = (val >> 3) & 0x7;
+//			chip_width[i] = val & 0x7;
+//			//val = ReadSpdByte(MemTetrNum, DDR4spd_CHIPBANKS, SpdCtrl.AsWhole);
+//			val = spd_byte[DDR4spd_CHIPBANKS];
+//			chip_banks[i] = (val >> 4) & 0x7;
+//			capacity[i] = val & 0xF;
+//			//val = ReadSpdByte(MemTetrNum, DDR4spd_WIDTH, SpdCtrl.AsWhole);
+//			val = spd_byte[DDR4spd_WIDTH];
+//			module_width[i] = val & 0x7;
+//			//val = ReadSpdByte(MemTetrNum, DDR4spd_TIMEBASES, SpdCtrl.AsWhole);
+//			val = spd_byte[DDR4spd_TIMEBASES];
+//			mtb[i] = (val >> 2) & 0x3; // 00 = 125 ps, All others reserved
+//			ftb[i] = val & 0x3; // 00 = 1 ps, All others reserved
+//			cas_lat[i] = spd_4byte[DDR4spd_CASLAT0 >> 2];
+//
+//			//cas_lat_min[i] = ReadSpdByte(MemTetrNum, DDR4spd_CASLATMIN, SpdCtrl.AsWhole);
+//			//val = ReadSpdByte(MemTetrNum, DDR4spd_CASLMFINE, SpdCtrl.AsWhole);
+//			cas_lat_min[i] = spd_byte[DDR4spd_CASLATMIN];
+//			val = spd_byte[DDR4spd_CASLMFINE];
+//			tAAmin[i] = cas_lat_min[i] * 0.125 + val * 0.001;
+//
+//			//cycle_time[i] = ReadSpdByte(MemTetrNum, DDR4spd_CYCLETIME, SpdCtrl.AsWhole);
+//			//char valb = ReadSpdByte(MemTetrNum, DDR4spd_CYCLTMFINE, SpdCtrl.AsWhole);
+//			cycle_time[i] = spd_byte[DDR4spd_CYCLETIME];
+//			char valb = spd_byte[DDR4spd_CYCLTMFINE];
+//			tCKAVGmin[i] = cycle_time[i] * 0.125 + valb * 0.001;
+//
+//			val = spd_byte[320];
+//			mem_name[i] = spd_byte[321];
+//			mem_name[i] |= val << 8;
+//		}
+//
+//	}
+//	if (-1 == Status)
+//		ModuleCnt--;
+//
+//	TCHAR strMem[64];
+//	MemoryManufacturer(mem_name[0], strMem);
+//
+//	ULONG PhysMemSize = (1 << row_addr[0]) *
+//		(1 << col_addr[0]) *
+//		module_banks[0] *
+//		chip_banks[0] *
+//		ModuleCnt * 2; // in 32-bit Words
+//
+//	if (mem_type[0] == SDRAMmt_DDR4)
+//	{
+//		//ULONG FreqMHz = ULONG(2 * (1000 / tCKAVGmin[0]) + 0.5);
+//		ULONG FreqMHz = (ULONG)ceil(2 * (1000 / tCKAVGmin[0]));
+//
+//		ULONG mask = 0x20000000;
+//		int i = 29;
+//		for (; i > 0; i--)
+//		{
+//			if (cas_lat[0] & mask)
+//				break;
+//			mask >>= 1;
+//		}
+//		_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR4-%d  CL%d  "), strMem, FreqMHz, i + 6); // подгонка CL под маркировку
+//																									//_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR4-%d  CL%d  "), strMem, FreqMHz, i + 7);
+//																									//_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR4-%d  CL%.1f  "), strMem, FreqMHz, tAAmin[0]);
+//		ULONG ModuleBanks = module_banks[0] + 1;
+//		ULONG PrimWidth = 8 << module_width[0];
+//		ULONG ChipWidth = 4 << chip_width[0];
+//		__int64 CapacityMbits = __int64(1 << capacity[0]) * 256 * 1024 * 1024;
+//		PhysMemSize = ((CapacityMbits >> 3) * (__int64)PrimWidth / ChipWidth * ModuleBanks *
+//			ModuleCnt) >> 2; // in 32-bit Words
+//	}
+//	return PhysMemSize;
+//}
 
 //***************************************************************************************
 ULONG GetMemorySize(TCHAR* strMemType)
@@ -1331,6 +1524,10 @@ ULONG GetMemorySize(TCHAR* strMemType)
 	if(MAX_TETRNUM == MemTetrNum)
 		return 0;
 	
+	//if (memTetrID == 0xE7 ||
+	//	memTetrID == 0xE8)
+	//	return Ddr4Bit16(MemTetrNum, strMemType);
+
 	SDRAM_SPDCTRL SpdCtrl;
 	SpdCtrl.AsWhole = 0;
 	SpdCtrl.ByBits.Read = 1;
@@ -1338,7 +1535,7 @@ ULONG GetMemorySize(TCHAR* strMemType)
 	UCHAR mem_type[SDRAM_MAXSLOTS];
 	SpdCtrl.ByBits.Slot = 0;
 	mem_type[0] = ReadSpdByte(MemTetrNum, SDRAMspd_MEMTYPE, SpdCtrl.AsWhole);
-	if(memTetrID != 0x70 && memTetrID != 0x9B && memTetrID != 0xA5)
+	if(memTetrID != 0x70 && memTetrID != 0x9B && memTetrID != 0xA5) // SDRAM_PEX5 && SDRAM_DDR3X && DDR3_TST
 	{
 		SpdCtrl.ByBits.Slot = 1;
 		mem_type[1] = ReadSpdByte(MemTetrNum, SDRAMspd_MEMTYPE, SpdCtrl.AsWhole);
@@ -1352,8 +1549,11 @@ ULONG GetMemorySize(TCHAR* strMemType)
 	}
 	int ModuleCnt = 0;
 	for(int i = 0; i < SDRAM_MAXSLOTS; i++)
-		if(mem_type[i] == SDRAMmt_DDR || mem_type[i] == SDRAMmt_DDR2 || mem_type[i] == SDRAMmt_DDR3)
-			ModuleCnt++;
+		if(mem_type[i] == SDRAMmt_DDR || 
+			mem_type[i] == SDRAMmt_DDR2 || 
+			mem_type[i] == SDRAMmt_DDR3 || 
+			mem_type[i] == SDRAMmt_DDR4)
+				ModuleCnt++;
 	if(!ModuleCnt)
 	    return 0;
 
@@ -1362,69 +1562,116 @@ ULONG GetMemorySize(TCHAR* strMemType)
 	UCHAR row_addr[SDRAM_MAXSLOTS], col_addr[SDRAM_MAXSLOTS], module_banks[SDRAM_MAXSLOTS], module_width[SDRAM_MAXSLOTS],
 		  chip_width[SDRAM_MAXSLOTS], chip_banks[SDRAM_MAXSLOTS], cycle_time[SDRAM_MAXSLOTS], capacity[SDRAM_MAXSLOTS];
 	UCHAR mtb_dividend[SDRAM_MAXSLOTS], mtb_divider[SDRAM_MAXSLOTS];
+	UCHAR mtb[SDRAM_MAXSLOTS], ftb[SDRAM_MAXSLOTS];
 	unsigned __int64 mem_name[SDRAM_MAXSLOTS] = {0, 0};
-	USHORT cas_lat[SDRAM_MAXSLOTS];
-	for(int i = 0; i < ModuleCnt; i++)
+	ULONG cas_lat[SDRAM_MAXSLOTS] = { 0, 0 };
+	UCHAR cas_lat_min[SDRAM_MAXSLOTS];
+	double tAAmin[SDRAM_MAXSLOTS], tCKAVGmin[SDRAM_MAXSLOTS];
+	for (int i = 0; i < ModuleCnt; i++)
 	{
 		SpdCtrl.ByBits.Slot = i;
-		if(mem_type[i] == SDRAMmt_DDR3)
+
+		//UCHAR spd_byte[512];
+		//for (int j = 0; j < 256; j++)
+		//	spd_byte[j] = ReadSpdByte(MemTetrNum, j, SpdCtrl.AsWhole);
+
+		if (mem_type[i] == SDRAMmt_DDR4)
 		{
-			val = ReadSpdByte(MemTetrNum, DDR3spd_ROWCOLADDR, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_ROWCOLADDR, SpdCtrl.AsWhole);
 			row_addr[i] = (val >> 3) & 0x7;
 			col_addr[i] = val & 0x7;
-			val = ReadSpdByte(MemTetrNum, DDR3spd_MODBANKS, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_MODBANKS, SpdCtrl.AsWhole);
 			module_banks[i] = (val >> 3) & 0x7;
 			chip_width[i] = val & 0x7;
-			val = ReadSpdByte(MemTetrNum, DDR3spd_CHIPBANKS, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_CHIPBANKS, SpdCtrl.AsWhole);
 			chip_banks[i] = (val >> 4) & 0x7;
 			capacity[i] = val & 0xF;
-			val = ReadSpdByte(MemTetrNum, DDR3spd_WIDTH, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_WIDTH, SpdCtrl.AsWhole);
 			module_width[i] = val & 0x7;
-			mtb_dividend[i] = ReadSpdByte(MemTetrNum, DDR3spd_MTBDIVIDEND, SpdCtrl.AsWhole);
-			mtb_divider[i] = ReadSpdByte(MemTetrNum, DDR3spd_MTBDIVIDER, SpdCtrl.AsWhole);
-			cas_lat[i] = ReadSpdByte(MemTetrNum, DDR3spd_CASLATL, SpdCtrl.AsWhole);
-			val = ReadSpdByte(MemTetrNum, DDR3spd_CASLATH, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_TIMEBASES, SpdCtrl.AsWhole);
+			mtb[i] = (val >> 2) & 0x3; // 00 = 125 ps, All others reserved
+			ftb[i] = val & 0x3; // 00 = 1 ps, All others reserved
+			cas_lat[i] = ReadSpdByte(MemTetrNum, DDR4spd_CASLAT0, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_CASLAT1, SpdCtrl.AsWhole);
 			cas_lat[i] |= (val << 8);
-			cycle_time[i] = ReadSpdByte(MemTetrNum, DDR3spd_CYCLETIME, SpdCtrl.AsWhole);
-			mem_name[i] = ReadSpdByte(MemTetrNum, 118, SpdCtrl.AsWhole);
-			//for(int j = 0; j < 8; j++)
-			//{
-			//	val = ReadSpdByte(MemTetrNum, 117+j, SpdCtrl.AsWhole);
-			//	mem_name[i] |= val << (8*j);
-			//}
+			val = ReadSpdByte(MemTetrNum, DDR4spd_CASLAT2, SpdCtrl.AsWhole);
+			cas_lat[i] |= (val << 16);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_CASLAT3, SpdCtrl.AsWhole);
+			cas_lat[i] |= (val << 24);
+
+			cas_lat_min[i] = ReadSpdByte(MemTetrNum, DDR4spd_CASLATMIN, SpdCtrl.AsWhole);
+			val = ReadSpdByte(MemTetrNum, DDR4spd_CASLMFINE, SpdCtrl.AsWhole);
+			tAAmin[i] = cas_lat_min[i] * 0.125 + val * 0.001;
+			
+			cycle_time[i] = ReadSpdByte(MemTetrNum, DDR4spd_CYCLETIME, SpdCtrl.AsWhole);
+			char valb = ReadSpdByte(MemTetrNum, DDR4spd_CYCLTMFINE, SpdCtrl.AsWhole);
+			tCKAVGmin[i] = cycle_time[i] * 0.125 + valb * 0.001;
+
+			val = ReadSpdByte(MemTetrNum, 320, SpdCtrl.AsWhole);
+			mem_name[i] = ReadSpdByte(MemTetrNum, 321, SpdCtrl.AsWhole);
+			mem_name[i] |= val << 8;
 		}
 		else
 		{
-			row_addr[i] = ReadSpdByte(MemTetrNum, SDRAMspd_ROWADDR, SpdCtrl.AsWhole);
-			col_addr[i] = ReadSpdByte(MemTetrNum, SDRAMspd_COLADDR, SpdCtrl.AsWhole);
-			module_banks[i] = ReadSpdByte(MemTetrNum, SDRAMspd_MODBANKS, SpdCtrl.AsWhole);
-			if(mem_type[i] == SDRAMmt_DDR2)
-				module_banks[i] = (module_banks[i] & 0x07) + 1;
-			chip_width[i] = ReadSpdByte(MemTetrNum, SDRAMspd_WIDTH, SpdCtrl.AsWhole);
-			chip_banks[i] = ReadSpdByte(MemTetrNum, SDRAMspd_CHIPBANKS, SpdCtrl.AsWhole);
-			cycle_time[i] = ReadSpdByte(MemTetrNum, SDRAMspd_CYCLETIME, SpdCtrl.AsWhole);
-			cas_lat[i] = ReadSpdByte(MemTetrNum, SDRAMspd_CASLAT, SpdCtrl.AsWhole);
-			for(int j = 0; j < 8; j++)
+			if (mem_type[i] == SDRAMmt_DDR3)
 			{
-				unsigned __int64 val64 = (unsigned __int64)ReadSpdByte(MemTetrNum, 64+j, SpdCtrl.AsWhole);
-				mem_name[i] |= val64 << (8*j);
-				//if(val != 0x7F)
+				val = ReadSpdByte(MemTetrNum, DDR3spd_ROWCOLADDR, SpdCtrl.AsWhole);
+				row_addr[i] = (val >> 3) & 0x7;
+				col_addr[i] = val & 0x7;
+				val = ReadSpdByte(MemTetrNum, DDR3spd_MODBANKS, SpdCtrl.AsWhole);
+				module_banks[i] = (val >> 3) & 0x7;
+				chip_width[i] = val & 0x7;
+				val = ReadSpdByte(MemTetrNum, DDR3spd_CHIPBANKS, SpdCtrl.AsWhole);
+				chip_banks[i] = (val >> 4) & 0x7;
+				capacity[i] = val & 0xF;
+				val = ReadSpdByte(MemTetrNum, DDR3spd_WIDTH, SpdCtrl.AsWhole);
+				module_width[i] = val & 0x7;
+				mtb_dividend[i] = ReadSpdByte(MemTetrNum, DDR3spd_MTBDIVIDEND, SpdCtrl.AsWhole);
+				mtb_divider[i] = ReadSpdByte(MemTetrNum, DDR3spd_MTBDIVIDER, SpdCtrl.AsWhole);
+				cas_lat[i] = ReadSpdByte(MemTetrNum, DDR3spd_CASLATL, SpdCtrl.AsWhole);
+				val = ReadSpdByte(MemTetrNum, DDR3spd_CASLATH, SpdCtrl.AsWhole);
+				cas_lat[i] |= (val << 8);
+				cycle_time[i] = ReadSpdByte(MemTetrNum, DDR3spd_CYCLETIME, SpdCtrl.AsWhole);
+				mem_name[i] = ReadSpdByte(MemTetrNum, 118, SpdCtrl.AsWhole);
+				//for(int j = 0; j < 8; j++)
 				//{
-				//	mem_name[i] = val;
-				//	break;
+				//	val = ReadSpdByte(MemTetrNum, 117+j, SpdCtrl.AsWhole);
+				//	mem_name[i] |= val << (8*j);
 				//}
 			}
-			if(i && ((row_addr[i] != row_addr[i-1]) ||
-					 (col_addr[i] != col_addr[i-1]) || 
-					 (module_banks[i] != module_banks[i-1]) ||
-					 (chip_width[i] != chip_width[i-1]) || 
-					 (chip_banks[i] != chip_banks[i-1]) || 
-					 (cas_lat[i] != cas_lat[i-1]) || 
-					 (cycle_time[i] != cycle_time[i-1])
-					))
+			else
 			{
-				Status = -1;
-			}			
+				row_addr[i] = ReadSpdByte(MemTetrNum, SDRAMspd_ROWADDR, SpdCtrl.AsWhole);
+				col_addr[i] = ReadSpdByte(MemTetrNum, SDRAMspd_COLADDR, SpdCtrl.AsWhole);
+				module_banks[i] = ReadSpdByte(MemTetrNum, SDRAMspd_MODBANKS, SpdCtrl.AsWhole);
+				if (mem_type[i] == SDRAMmt_DDR2)
+					module_banks[i] = (module_banks[i] & 0x07) + 1;
+				chip_width[i] = ReadSpdByte(MemTetrNum, SDRAMspd_WIDTH, SpdCtrl.AsWhole);
+				chip_banks[i] = ReadSpdByte(MemTetrNum, SDRAMspd_CHIPBANKS, SpdCtrl.AsWhole);
+				cycle_time[i] = ReadSpdByte(MemTetrNum, SDRAMspd_CYCLETIME, SpdCtrl.AsWhole);
+				cas_lat[i] = ReadSpdByte(MemTetrNum, SDRAMspd_CASLAT, SpdCtrl.AsWhole);
+				for (int j = 0; j < 8; j++)
+				{
+					unsigned __int64 val64 = (unsigned __int64)ReadSpdByte(MemTetrNum, 64 + j, SpdCtrl.AsWhole);
+					mem_name[i] |= val64 << (8 * j);
+					//if(val != 0x7F)
+					//{
+					//	mem_name[i] = val;
+					//	break;
+					//}
+				}
+				if (i && ((row_addr[i] != row_addr[i - 1]) ||
+					(col_addr[i] != col_addr[i - 1]) ||
+					(module_banks[i] != module_banks[i - 1]) ||
+					(chip_width[i] != chip_width[i - 1]) ||
+					(chip_banks[i] != chip_banks[i - 1]) ||
+					(cas_lat[i] != cas_lat[i - 1]) ||
+					(cycle_time[i] != cycle_time[i - 1])
+					))
+				{
+					Status = -1;
+				}
+			}
 		}
 	}
 	if(-1 == Status)
@@ -1434,7 +1681,7 @@ ULONG GetMemorySize(TCHAR* strMemType)
 	MemoryManufacturer(mem_name[0], strMem);
 	if(mem_type[0] == SDRAMmt_DDR)
 	{
-		_stprintf_s(strMemType, MAX_STRING_LEN, _BRDC("%s  DDR "), strMem);
+		_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR "), strMem);
 	}
 	if(mem_type[0] == SDRAMmt_DDR2)
 	{
@@ -1466,7 +1713,7 @@ ULONG GetMemorySize(TCHAR* strMemType)
 				break;
 			mask >>= 1;
 		}
-		_stprintf_s(strMemType, MAX_STRING_LEN, _BRDC("%s  DDR2-%d  CL%d  "), strMem, ULONG((1000/cTime)*2+0.5), i);
+		_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR2-%d  CL%d  "), strMem, ULONG((1000/cTime)*2+0.5), i);
 	    //printf( "DDR2 memory type (%02X) - %d MHz\n", buf0[2], FreqMHz);
 	}
 	ULONG PhysMemSize =	(1 << row_addr[0]) *
@@ -1486,7 +1733,7 @@ ULONG GetMemorySize(TCHAR* strMemType)
 				break;
 			mask >>= 1;
 		}
-		_stprintf_s(strMemType, MAX_STRING_LEN, _BRDC("%s  DDR3-%d  CL%d  "), strMem, FreqMHz, i+4);
+		_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR3-%d  CL%d  "), strMem, FreqMHz, i+4);
 		//printf( "DDR3 memory type (%02X) - %d MHz\n", buf0[2], FreqMHz);
 		ULONG ModuleBanks = module_banks[0] + 1;
 		ULONG PrimWidth = 8 << module_width[0];
@@ -1496,6 +1743,29 @@ ULONG GetMemorySize(TCHAR* strMemType)
 						ModuleCnt) >> 2; // in 32-bit Words
 	}
 
+	if (mem_type[0] == SDRAMmt_DDR4)
+	{
+		//ULONG FreqMHz = ULONG(2 * (1000 / tCKAVGmin[0]) + 0.5);
+		ULONG FreqMHz = (ULONG)ceil(2 * (1000 / tCKAVGmin[0]));
+
+		ULONG mask = 0x20000000;
+		int i = 29;
+		for (; i > 0; i--)
+		{
+			if (cas_lat[0] & mask)
+				break;
+			mask >>= 1;
+		}
+		_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR4-%d  CL%d  "), strMem, FreqMHz, i+6); // подгонка CL под маркировку
+		//_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR4-%d  CL%d  "), strMem, FreqMHz, i + 7);
+		//_stprintf_s(strMemType, MAX_STRING_LEN, _T("%s  DDR4-%d  CL%.1f  "), strMem, FreqMHz, tAAmin[0]);
+		ULONG ModuleBanks = module_banks[0] + 1;
+		ULONG PrimWidth = 8 << module_width[0];
+		ULONG ChipWidth = 4 << chip_width[0];
+		__int64 CapacityMbits = __int64(1 << capacity[0]) * 256 * 1024 * 1024;
+		PhysMemSize = ((CapacityMbits >> 3) * (__int64)PrimWidth / ChipWidth * ModuleBanks *
+			ModuleCnt) >> 2; // in 32-bit Words
+	}
 	return PhysMemSize;
 }
 
@@ -1580,8 +1850,8 @@ void getVref(double& refp, double& refn)
 //***************************************************************************************
 int ReadPldFile(PCTSTR PldFileName, PVOID& fileBuffer, ULONG& fileSize)
 {
-	BRDCHAR *FirstChar;
-	BRDCHAR FullFileName[MAX_PATH];
+	TCHAR *FirstChar;
+	TCHAR FullFileName[MAX_PATH];
 	GetFullPathName(PldFileName, MAX_PATH, FullFileName, &FirstChar);
 	HANDLE hFile = CreateFile(FullFileName,
 								GENERIC_READ, 
@@ -1636,7 +1906,7 @@ ULONG BrdTest(int in_tetr, int out_tetr)
 	}
 	if((3 != chan_state0) || (3 != chan_state1))
 	{
-		MessageBox(NULL, _BRDC("DMA Channels are busy already!!!"), _BRDC("ISDCLASS"), MB_OK); 
+		MessageBox(NULL, _T("DMA Channels are busy already!!!"), _T("ISDCLASS"), MB_OK); 
 		return status;
 	}
 
@@ -1656,14 +1926,14 @@ ULONG BrdTest(int in_tetr, int out_tetr)
 	status = AllocMemory(&pOutBuf, blkSize, blkNum, isSysMem, dir, addr, 0); // канал 0
 	if(status)
 		//printf("AllocMemory: ERROR !!!\n");
-		MessageBox(NULL, _BRDC("Allocate memory for output is ERROR!!!"), _BRDC("ISDCLASS"), MB_OK); 
+		MessageBox(NULL, _T("Allocate memory for output is ERROR!!!"), _T("ISDCLASS"), MB_OK); 
 	else
 	{
 		printf("Memory for output is Allocated!!!  (%d block)\n", blkNum);
 	}
 
 	// заполняю выходные буфера
-	BRDC_printf(_BRDC("Counter test\n"));
+	_tprintf(_T("Counter test\n"));
 	PULONG* pBufferZ = (PULONG*)pOutBuf;
 	for(ULONG iBlock = 0; iBlock < blkNum; iBlock++)
 		for(ULONG i = 0; i < blkSize / sizeof(ULONG); i++)
@@ -1681,7 +1951,7 @@ ULONG BrdTest(int in_tetr, int out_tetr)
 	status = AllocMemory(&pInBuf, blkSize, blkNum, isSysMem, dir, addr, 1); // канал 1
 	if(status)
 		//printf("AllocMemory: ERROR !!!\n");
-		MessageBox(NULL, _BRDC("Allocate memory for input is ERROR!!!"), _BRDC("ISDCLASS"), MB_OK); 
+		MessageBox(NULL, _T("Allocate memory for input is ERROR!!!"), _T("ISDCLASS"), MB_OK); 
 	else
 	{
 		printf("Memory for input is Allocated!!!  (%d block)\n", blkNum);
@@ -1743,9 +2013,9 @@ ULONG BrdTest(int in_tetr, int out_tetr)
 			cnt_err++;
 	}
 	if(cnt_err)
-		MessageBox(NULL, _BRDC("COUNTER test is ERROR!!!"), _BRDC("ISDCLASS"), MB_OK); 
+		MessageBox(NULL, _T("COUNTER test is ERROR!!!"), _T("ISDCLASS"), MB_OK); 
 	else
-		MessageBox(NULL, _BRDC("COUNTER test is SUCCESS!!!"), _BRDC("ISDCLASS"), MB_OK); 
+		MessageBox(NULL, _T("COUNTER test is SUCCESS!!!"), _T("ISDCLASS"), MB_OK); 
 
 	status = FreeMemory(0);
 	status = FreeMemory(1);

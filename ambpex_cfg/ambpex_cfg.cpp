@@ -491,7 +491,7 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 		if(err < 0)
 		{
 			g_drvFlg = 0;
-			SetDlgItemText(hdlg, IDC_VERSION, _BRDC("Open error!"));
+			SetDlgItemText(hdlg, IDC_VERSION, _T("Open error!"));
 		}
 	}
 
@@ -756,6 +756,8 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 				subm_present[0] = 1;
 				subm_present[1] = 0;
 				subm_present[2] = 0;
+				if (g_DevID == 0x53B4) // RFDR4
+					subm_present[0] = 0;
 			}
 			if (subm_present[0])
 			{
@@ -763,8 +765,8 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 					eeprom_data[i] = 0;
 				if(fl_pex)
 					ReadSubICR(0, eeprom_data, 32, offset_admicr);
-				else
-					ReadAdmIdROM(eeprom_data, 32, offset_admicr);
+				//else
+					//ReadAdmIdROM(eeprom_data, 32, offset_admicr);
 				USHORT admtag = *(USHORT*)eeprom_data;
 				if (admtag == 0x0080)
 				{
@@ -1079,7 +1081,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 		{
 		case VK_F1: // F1
 			{
-				//MessageBox(NULL, _BRDC("Base Module ICR will be ERASED!!!\n Are you sure?"), _BRDC("AMBPEX Config"), MB_YESNO ); 
+				//MessageBox(NULL, _T("Base Module ICR will be ERASED!!!\n Are you sure?"), _T("AMBPEX Config"), MB_YESNO ); 
 //				HINSTANCE result = ShellExecute(hWnd, _T("open"), sHelpFileName, NULL, NULL, SW_SHOWNORMAL);
 //				//ShellExecute(hWnd, _T("open"), sHelpFileName, NULL, NULL, SW_SHOWNORMAL);
 				//DialogBox(g_hInst, (LPCTSTR)IDD_ABOUTBOX, hDlg, (DLGPROC)About);
@@ -1100,11 +1102,11 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 				EnableWindow(hWndLoadBtn, FALSE);
 				if(dev_openPlx(g_dev) < 0)
 				{
-					MessageBox(NULL, _BRDC("Device open error!!!"), _BRDC("AMBPEX Config"), MB_OK); 
+					MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK); 
 				}
 				else
 				{
-					TCHAR szFile[MAX_PATH] = _BRDC(""); // путь и имя файла
+					TCHAR szFile[MAX_PATH] = _T(""); // путь и имя файла
 					GetDlgItemText(hdlg, IDC_PLDFILENAME, szFile, MAX_PATH);
 					PVOID fileBuffer = NULL;
 					ULONG fileSize;
@@ -1157,9 +1159,9 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     	case IDC_PLDFILEBROWSE:
     		{					// IDC_PLDFILEBROWSE
 				/*OPENFILENAME ofn;
-				TCHAR szFile[MAX_PATH] = _BRDC(""); // путь и имя файла
+				TCHAR szFile[MAX_PATH] = _T(""); // путь и имя файла
 				TCHAR szFileTitle[MAX_PATH];// имя файла без пути
-				TCHAR szFilter[MAX_PATH] = _BRDC("PLD files\0*.mcs\0");
+				TCHAR szFilter[MAX_PATH] = _T("PLD files\0*.mcs\0");
 				TCHAR InitialDir[MAX_PATH];
 				GetCurrentDirectory(sizeof(InitialDir)/sizeof(TCHAR), InitialDir);
 				memset(&ofn, 0, sizeof(OPENFILENAME));
@@ -1171,7 +1173,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 				ofn.nMaxFile = sizeof(szFile);
 				ofn.lpstrFileTitle = szFileTitle;
 				ofn.nMaxFileTitle = sizeof(szFileTitle);
-				ofn.lpstrTitle = _BRDC("Open PLD file");
+				ofn.lpstrTitle = _T("Open PLD file");
 				ofn.lpstrInitialDir = InitialDir;
 				ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 				if(!GetOpenFileName(&ofn))
@@ -1229,7 +1231,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 			}
     	case IDB_ERASEICR:
     		{					// IDB_ERASEICR
-				int ret = MessageBox(NULL, _BRDC("Base Module ICR will be ERASED!!!\n Are you sure?"), _BRDC("AMBPEX Config"), MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING); 
+				int ret = MessageBox(NULL, _T("Base Module ICR will be ERASED!!!\n Are you sure?"), _T("AMBPEX Config"), MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING); 
 				if(ret == IDYES)
 				{
 					HWND hWndEraBtn = GetDlgItem(hdlg, IDB_ERASEICR);
@@ -1239,7 +1241,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 					{
 						err = dev_openPlx(g_dev);
 						if(err < 0)
-							MessageBox(NULL, _BRDC("Device open error!!!"), _BRDC("AMBPEX Config"), MB_OK); 
+							MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK); 
 					}
 					if(err >= 0)
 					{
@@ -1285,7 +1287,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 				{
 					err = dev_openPlx(g_dev);
 					if(err < 0)
-						MessageBox(NULL, _BRDC("Device open error!!!"), _BRDC("AMBPEX Config"), MB_OK); 
+						MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK); 
 				}
 				if(err >= 0)
 				{
@@ -1311,7 +1313,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 				{
 					err = dev_openPlx(g_dev);
 					if(err < 0)
-						MessageBox(NULL, _BRDC("Device open error!!!"), _BRDC("AMBPEX Config"), MB_OK); 
+						MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK); 
 				}
 				if(err >= 0)
 				{
@@ -1353,7 +1355,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 				{
 					err = dev_openPlx(g_dev);
 					if(err < 0)
-						MessageBox(NULL, _BRDC("Device open error!!!"), _BRDC("AMBPEX Config"), MB_OK); 
+						MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK); 
 					else
 					{
 						ULONG valueVER = 0;
@@ -1387,10 +1389,10 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 										BrdTest(iTetr, tetr_out);
 								}
 								else
-									MessageBox(NULL, _BRDC("TEST tetrada (test128_out) is NOT present !!!"), _BRDC("AMBPEX Config"), MB_OK); 
+									MessageBox(NULL, _T("TEST tetrada (test128_out) is NOT present !!!"), _T("AMBPEX Config"), MB_OK); 
 
-								//MessageBox(NULL, _BRDC("MAIN tetrad can't be tested!!!\n No that tetrad version or modification.\nUpdate that PLD!!!"),
-								//				_BRDC("AMBPEX Config"), MB_OK); 
+								//MessageBox(NULL, _T("MAIN tetrad can't be tested!!!\n No that tetrad version or modification.\nUpdate that PLD!!!"),
+								//				_T("AMBPEX Config"), MB_OK); 
 								//wprintf(L"MAIN tetrad can't testing: version = %d.%d\n", valueVER>>8, valueVER&0xff);
 							}
 						}
@@ -1408,23 +1410,23 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 						sscanf_s(ver_buf, "wambpex ver. %i.%i", &ver_major, &ver_minor);
 #ifdef _WIN64
 						if(ver_major == 1 && ver_minor < 45)
-							MessageBox(NULL, _BRDC("Driver version is too old !!!\nUpdate it"), _BRDC("AMBPEX Config"), MB_OK); 
+							MessageBox(NULL, _T("Driver version is too old !!!\nUpdate it"), _T("AMBPEX Config"), MB_OK); 
 						else
 							if(ver_major == 1 && ver_minor < 64)
 							{
 								MessageBox(NULL, 
-								_BRDC("Driver (version < 1.64) consists errors:\nBug#140 & Bug#1196 - errors by numbers of DMA descriptors multiple 63.\nUpdate that driver!!!"),
-								_BRDC("AMBPEX Config"), MB_OK); 
+								_T("Driver (version < 1.64) consists errors:\nBug#140 & Bug#1196 - errors by numbers of DMA descriptors multiple 63.\nUpdate that driver!!!"),
+								_T("AMBPEX Config"), MB_OK); 
 							}
 #else
 						if(ver_major < 2)
-							MessageBox(NULL, _BRDC("Driver version is too old !!!\nUpdate it"), _BRDC("AMBPEX Config"), MB_OK); 
+							MessageBox(NULL, _T("Driver version is too old !!!\nUpdate it"), _T("AMBPEX Config"), MB_OK); 
 						else
 							if(ver_minor < 41)
 							{
 								MessageBox(NULL, 
-								_BRDC("Driver (version < 2.41) consists errors:\nBug#140 & Bug#1196 - errors by numbers of DMA descriptors multiple 63.\nUpdate that driver!!!"),
-								_BRDC("AMBPEX Config"), MB_OK); 
+								_T("Driver (version < 2.41) consists errors:\nBug#140 & Bug#1196 - errors by numbers of DMA descriptors multiple 63.\nUpdate that driver!!!"),
+								_T("AMBPEX Config"), MB_OK); 
 							}
 #endif
 					}
@@ -1435,39 +1437,40 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 					status = ReadRegData(0, 0, ADM2IFnr_IDMOD, valueMOD);
 					PCIEC_INFO pcic_info;
 					status = HostReg(&pcic_info);
-					if(pcic_info.coreid == 0x22 && pcic_info.pldver <= 0x104)
+					if (pcic_info.coreid == 0x22 && pcic_info.pldver <= 0x104)
 					{
-						MessageBox(NULL, _BRDC("PLD consists error:\nBug#1455 - FM-module PRESENT is not correct.\nUpdate that PLD!!!"),
-										_BRDC("AMBPEX Config"), MB_OK); 
+						MessageBox(NULL, _T("PLD consists error:\nBug#1455 - FM-module PRESENT is not correct.\nUpdate that PLD!!!"),
+							_T("AMBPEX Config"), MB_OK);
 					}
+
 					if((pcic_info.coreid == 0x12 && pcic_info.pldver < 0x101) || (pcic_info.coreid == 0x11 && pcic_info.pldver < 0x102))
 					{
-						MessageBox(NULL, _BRDC("PLD consists error:\nBug#466 - FMC Power on is not correct.\nUpdate that PLD!!!"),
-										_BRDC("AMBPEX Config"), MB_OK); 
+						MessageBox(NULL, _T("PLD consists error:\nBug#466 - FMC Power on is not correct.\nUpdate that PLD!!!"),
+										_T("AMBPEX Config"), MB_OK); 
 					}
 					if(pcic_info.dmaver < 0x102)
 					{
-						MessageBox(NULL, _BRDC("PLD (DMA channel version < 1.2) consists error:\nBug#182 - error by 64-bit DMA addressing (above 4GB memory).\nUpdate that PLD!!!"),
-										_BRDC("AMBPEX Config"), MB_OK); 
+						MessageBox(NULL, _T("PLD (DMA channel version < 1.2) consists error:\nBug#182 - error by 64-bit DMA addressing (above 4GB memory).\nUpdate that PLD!!!"),
+										_T("AMBPEX Config"), MB_OK); 
 					}
 					else
 					{
 						if(pcic_info.dmaver < 0x103)
 						{
-							MessageBox(NULL, _BRDC("PLD (DMA channel version < 1.3) consists error:\nBug#147 - there is a chance the DMA channel is stopped.\nUpdate that PLD!!!"),
-											_BRDC("AMBPEX Config"), MB_OK); 
+							MessageBox(NULL, _T("PLD (DMA channel version < 1.3) consists error:\nBug#147 - there is a chance the DMA channel is stopped.\nUpdate that PLD!!!"),
+											_T("AMBPEX Config"), MB_OK); 
 						}
 						if(pcic_info.errcrc != (ULONG)-1 && pcic_info.errcrc)
 						{
 							TCHAR buf[MAX_STRING_LEN];
 							_stprintf(buf, _T("DMA descriptor CRC error counter = %d !!!"), pcic_info.errcrc);
-							MessageBox(NULL, buf, _BRDC("AMBPEX Config"), MB_OK); 
+							MessageBox(NULL, buf, _T("AMBPEX Config"), MB_OK); 
 						}
 						if(pcic_info.errcto != (ULONG)-1 && pcic_info.errcto)
 						{
 							TCHAR buf[MAX_STRING_LEN];
 							_stprintf(buf, _T("DMA Completion timeout error counter = %d !!!"), pcic_info.errcto);
-							MessageBox(NULL, buf, _BRDC("AMBPEX Config"), MB_OK); 
+							MessageBox(NULL, buf, _T("AMBPEX Config"), MB_OK); 
 						}
 
 						//if(valueVER >= 0x104 && pcic_info.dmaver >= 0x102)
@@ -1481,8 +1484,8 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 								status = DmaChannelTest(0, 1);
 							else
 							{
-								MessageBox(NULL, _BRDC("MAIN tetrad can't be tested!!!\n No that tetrad version or modification.\nUpdate that PLD!!!"),
-												_BRDC("AMBPEX Config"), MB_OK); 
+								MessageBox(NULL, _T("MAIN tetrad can't be tested!!!\n No that tetrad version or modification.\nUpdate that PLD!!!"),
+												_T("AMBPEX Config"), MB_OK); 
 								//wprintf(L"MAIN tetrad can't testing: version = %d.%d\n", valueVER>>8, valueVER&0xff);
 							}
 					}
@@ -1503,7 +1506,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 
 				if(dev_open(g_dev) < 0)
 				{
-					MessageBox(NULL, _BRDC("Device open error!!!"), _BRDC("AMBPEX Config"), MB_OK); 
+					MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK); 
 				}
 				else
 				{
