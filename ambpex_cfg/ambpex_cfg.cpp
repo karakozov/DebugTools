@@ -15,6 +15,8 @@
 #include <tchar.h>
 
 #include <commctrl.h>
+
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #pragma comment(lib, "comctl32")
 
 #include <shlobj.h>
@@ -39,6 +41,16 @@ int g_DmaChanVerFlg;
 int g_tetrFlg;
 USHORT g_DevID = 0;
 TCHAR g_szDir[MAX_LOADSTRING];
+
+UCHAR g_bicrData[256];
+UCHAR g_sicrData[512];
+UCHAR g_s2icrData[512];
+int g_icrSize = 128;
+int g_icrFlag = 0;
+ULONG g_offset_admicr = 0;
+
+UCHAR g_spdData[512];
+int g_spdSize = 128;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -78,7 +90,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		return FALSE;
 	}
 
-	InitCommonControls();
+	INITCOMMONCONTROLSEX InitCtrls; //для контролов
+	InitCtrls.dwSize = sizeof(InitCtrls); //для контролов
+	InitCtrls.dwICC = ICC_WIN95_CLASSES; //для контролов
+	InitCommonControlsEx(&InitCtrls); //для контролов
+//	InitCommonControls();
 
 	DialogBox(hInstance, (LPCTSTR)IDD_AMBPAGE, g_hWnd, (DLGPROC)MainDlgProc);
 	//HWND hwndMain = CreateDialog(hInstance, (LPCTSTR)IDD_AMBPAGE, g_hWnd, (DLGPROC)MainDlgProc);
@@ -227,6 +243,329 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, LOWORD(wParam));
 			return (INT_PTR)TRUE;
 		}
+		break;
+	}
+	return (INT_PTR)FALSE;
+}
+
+int SPD_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
+{
+	TCHAR buf_data[2048] = _T("");
+	TCHAR buf[8];
+	int spd_size = g_spdData[0]; // if DDR2
+	if (g_spdData[2] == 11)	 // if DDR3
+	{
+		switch (g_spdData[0] & 0xF)
+		{
+		case 1:
+			spd_size = 128;
+			break;
+		case 2:
+			spd_size = 176;
+			break;
+		case 3:
+			spd_size = 256;
+			break;
+		default:
+			spd_size = 128;
+		}
+	}
+	if (g_spdData[2] == 12)	 // if DDR4
+	{
+		switch (g_spdData[0] & 0xF)
+		{
+		case 1:
+			spd_size = 128;
+			break;
+		case 2:
+			spd_size = 256;
+			break;
+		case 3:
+			spd_size = 384;
+			break;
+		case 4:
+			spd_size = 512;
+			break;
+		default:
+			spd_size = 128;
+		}
+	}
+
+	for (int i = 0; i < spd_size; i++)
+	{
+		//_itot_s(g_spdData[i], buf, 8, 16);
+		if(i%16 || i == 0)
+			_stprintf_s(buf, 8, _T("%02X "), g_spdData[i]);
+		else
+			_stprintf_s(buf, 8, _T("\n%02X "), g_spdData[i]);
+		_tcscat(buf_data, buf);
+		//_tcscat(buf_data, _T(" "));
+	}
+	//_stprintf_s(buf, MAX_STRING_LEN, _T("My SPD !!! My SPD !!! My SPD !!! My SPD !!!"));
+	SetDlgItemText(hdlg, IDC_SPDDATA, buf_data);
+	g_spdSize = spd_size;
+	return TRUE;
+}
+
+// Message handler for about box.
+INT_PTR CALLBACK SpdView(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+	HANDLE_MSG(hDlg, WM_INITDIALOG, SPD_OnInitDialog);
+//	case WM_INITDIALOG:
+//		return (INT_PTR)TRUE;
+
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		if (LOWORD(wParam) == IDC_SPDFILEBROWSE)
+		{
+			// IDC_SPDFILEBROWSE
+			OPENFILENAME ofn;
+			TCHAR szFile[MAX_PATH] = _T(""); // путь и имя файла
+			TCHAR szFileTitle[MAX_PATH];// имя файла без пути
+			TCHAR szFilter[MAX_PATH] = _T("SPD files\0*.spd\0");
+			TCHAR InitialDir[MAX_PATH];
+			GetCurrentDirectory(sizeof(InitialDir)/sizeof(TCHAR), InitialDir);
+			memset(&ofn, 0, sizeof(OPENFILENAME));
+			ofn.lStructSize = sizeof(OPENFILENAME);
+			ofn.hwndOwner = hDlg;
+			ofn.lpstrFilter = szFilter;
+			ofn.nFilterIndex = 1;
+			ofn.lpstrFile = szFile;
+			ofn.nMaxFile = sizeof(szFile);
+			ofn.lpstrFileTitle = szFileTitle;
+			ofn.nMaxFileTitle = sizeof(szFileTitle);
+			ofn.lpstrTitle = _T("Write SPD into file");
+			ofn.lpstrInitialDir = InitialDir;
+			ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+			if(!GetSaveFileName(&ofn))
+				return FALSE;
+			TCHAR* pStr = _tcschr(ofn.lpstrFile, '.');
+			if (!pStr)
+				_tcscat_s(ofn.lpstrFile, MAX_PATH, _T(".spd"));
+
+			HANDLE hFile = CreateFile(ofn.lpstrFile,
+										GENERIC_WRITE,
+										FILE_SHARE_WRITE | FILE_SHARE_READ,
+										NULL,
+										CREATE_ALWAYS,
+										FILE_ATTRIBUTE_NORMAL,
+										NULL);
+			if(hFile == INVALID_HANDLE_VALUE)
+				return FALSE;
+			unsigned long writesize;
+			int ret = WriteFile(hFile, g_spdData, g_spdSize, &writesize, NULL);
+			if (!ret)
+				return FALSE;
+			CloseHandle(hFile);
+/*		HWND hWndPldName = GetDlgItem(hdlg, IDC_PLDFILENAME);
+			BROWSEINFO bi;
+			TCHAR szDir[MAX_PATH];
+			LPITEMIDLIST pidl;
+			LPMALLOC pMalloc;
+			int nRet;
+			GetCurrentDirectory(MAX_PATH, szDir);
+			if (SUCCEEDED(SHGetMalloc(&pMalloc)))
+			{
+				nRet = 1;
+				ZeroMemory(&bi, sizeof(bi));
+				bi.hwndOwner = hdlg;
+				bi.pszDisplayName = szDir;
+				bi.lpszTitle = _T("Select the folder of PLD files, please!");
+				bi.pidlRoot = NULL;//ConvertPathToLpItemIdList(RootPath);
+				bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_NONEWFOLDERBUTTON;//BIF_USENEWUI;//BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT;
+				bi.lpfn = BrowseCallbackProc;//NULL;
+				pidl = SHBrowseForFolder(&bi);
+				if (pidl)
+					SHGetPathFromIDList(pidl, szDir);
+				else
+					nRet = 0;
+				pMalloc->Free(pidl);
+				pMalloc->Release();
+			}
+			if (nRet)
+				SetCurrentDirectory(szDir);
+			int file_cnt = (int)SendMessage(hWndPldName, CB_GETCOUNT, (WPARAM)0, (LPARAM)0);
+			for (int i = file_cnt - 1; i >= 0; i--)
+				SendMessage(hWndPldName, CB_DELETESTRING, (WPARAM)i, (LPARAM)0);
+			//SetDlgItemText(hdlg, IDC_PLDFILENAME, szFile);
+			//SendMessage(hWndPldName, CB_ADDSTRING, (WPARAM)0, (LPARAM)szFile);
+			TCHAR pldname[MAX_STRING_LEN];
+			BasemodName(g_DevID, pldname);
+			_tcslwr(pldname); // Convert a string to lowercase
+			_tcscat(pldname, _T("_*"));
+			WIN32_FIND_DATA FindFileData;
+			HANDLE hFind = FindFirstFile(pldname, &FindFileData);
+			if (hFind != INVALID_HANDLE_VALUE)
+			{
+				SendMessage(hWndPldName, CB_ADDSTRING, (WPARAM)0, (LPARAM)FindFileData.cFileName);
+				while (FindNextFile(hFind, &FindFileData) != 0)
+				{
+					SendMessage(hWndPldName, CB_ADDSTRING, (WPARAM)0, (LPARAM)FindFileData.cFileName);
+				}
+				FindClose(hFind);
+			}
+			SendMessage(hWndPldName, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+			//SetDlgItemText(hdlg, IDC_PLDFILENAME, szFile);
+			return TRUE;
+		*/}
+		break;
+	}
+	return (INT_PTR)FALSE;
+}
+
+int ICR_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
+{
+	TCHAR buf_data[2048] = _T("");
+	TCHAR buf[32];
+	UCHAR* icr_data = g_bicrData;
+	_tcscpy(buf, _T("Base module ICR"));
+	if (g_icrFlag == 1)
+	{
+		icr_data = g_sicrData;
+		_tcscpy(buf, _T("Submodule ICR"));
+	}
+	if (g_icrFlag == 2)
+	{
+		icr_data = g_s2icrData;
+		_tcscpy(buf, _T("Submodule 2 ICR"));
+	}
+	SetWindowText(hdlg, buf);
+
+	USHORT icr_teg = *(USHORT*)(icr_data);
+	USHORT icr_size = *(USHORT*)(icr_data + 4);
+	if (g_icrFlag == 0 && icr_teg != 0x4953)
+		icr_size = 0;
+	if (g_icrFlag == 1 && icr_teg != 0x0080)
+		icr_size = 0;
+	if (g_icrFlag == 2 && icr_teg != 0x0080)
+		icr_size = 0;
+
+	if (icr_size)
+	{
+		for (int i = 0; i < icr_size; i++)
+		{
+			//_itot_s(g_spdData[i], buf, 8, 16);
+			if (i % 16 || i == 0)
+				_stprintf_s(buf, 8, _T("%02X "), icr_data[i]);
+			else
+				_stprintf_s(buf, 8, _T("\n%02X "), icr_data[i]);
+			_tcscat(buf_data, buf);
+			//_tcscat(buf_data, _T(" "));
+		}
+	}
+	else
+		_tcscpy(buf_data, _T("Empty"));
+
+	SetDlgItemText(hdlg, IDC_ICRDATA, buf_data);
+
+	g_icrSize = icr_size;
+
+	return TRUE;
+}
+
+// Message handler for about box.
+INT_PTR CALLBACK IcrView(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+		HANDLE_MSG(hDlg, WM_INITDIALOG, ICR_OnInitDialog);
+		//	case WM_INITDIALOG:
+		//		return (INT_PTR)TRUE;
+
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		if (LOWORD(wParam) == IDC_ICRFILEBROWSE)
+		{
+			// IDC_ICRFILEBROWSE
+			OPENFILENAME ofn;
+			TCHAR szFile[MAX_PATH] = _T(""); // путь и имя файла
+			TCHAR szFileTitle[MAX_PATH];// имя файла без пути
+			TCHAR szFilter[MAX_PATH] = _T("ICR files\0*.icr\0");
+			TCHAR InitialDir[MAX_PATH];
+			GetCurrentDirectory(sizeof(InitialDir) / sizeof(TCHAR), InitialDir);
+			memset(&ofn, 0, sizeof(OPENFILENAME));
+			ofn.lStructSize = sizeof(OPENFILENAME);
+			ofn.hwndOwner = hDlg;
+			ofn.lpstrFilter = szFilter;
+			ofn.nFilterIndex = 1;
+			ofn.lpstrFile = szFile;
+			ofn.nMaxFile = sizeof(szFile);
+			ofn.lpstrFileTitle = szFileTitle;
+			ofn.nMaxFileTitle = sizeof(szFileTitle);
+			ofn.lpstrTitle = _T("Write ICR into file");
+			ofn.lpstrInitialDir = InitialDir;
+			ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+			if (!GetSaveFileName(&ofn))
+				return FALSE;
+			TCHAR* pStr = _tcschr(ofn.lpstrFile, '.');
+			if (!pStr)
+				_tcscat_s(ofn.lpstrFile, MAX_PATH, _T(".icr"));
+
+			HANDLE hFile = CreateFile(ofn.lpstrFile,
+				GENERIC_WRITE,
+				FILE_SHARE_WRITE | FILE_SHARE_READ,
+				NULL,
+				CREATE_ALWAYS,
+				FILE_ATTRIBUTE_NORMAL,
+				NULL);
+			if (hFile == INVALID_HANDLE_VALUE)
+				return FALSE;
+
+			UCHAR* icr_data = g_bicrData;
+			if (g_icrFlag == 1)
+				icr_data = g_sicrData;
+			if (g_icrFlag == 2)
+				icr_data = g_s2icrData;
+
+			unsigned long writesize;
+			int ret = WriteFile(hFile, icr_data, g_icrSize, &writesize, NULL);
+			if (!ret)
+				return FALSE;
+			CloseHandle(hFile);
+		}
+		if (LOWORD(wParam) == IDC_ICRCLEAR)
+		{
+			int ret = MessageBox(NULL, _T("Base Module ICR will be CLEAR!!!\n Are you sure?"), _T("AMBPEX Config"), MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING);
+			if(ret == IDYES)
+			{
+				HWND hWndEraBtn = GetDlgItem(hDlg, IDC_ICRCLEAR);
+				EnableWindow(hWndEraBtn, FALSE);
+				int err = dev_open(g_dev);
+				if(err < 0)
+				{
+					err = dev_openPlx(g_dev);
+					if(err < 0)
+						MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK);
+				}
+				if(err >= 0)
+				{
+					UCHAR eeprom_data[512];
+					for(int i = 0; i < 512; i++)
+						eeprom_data[i] = 0xFF;
+					if (g_icrFlag == 0)
+						WriteNvRAM(eeprom_data, 256, 0x80);
+					if (g_icrFlag == 1)
+						WriteSubICR(0, eeprom_data, 512, g_offset_admicr);
+					if (g_icrFlag == 2)
+						WriteSubICR(1, eeprom_data, 512, g_offset_admicr);
+					dev_close();
+				}
+				EnableWindow(hWndEraBtn, TRUE);
+			}
+			return TRUE;
+		}	
 		break;
 	}
 	return (INT_PTR)FALSE;
@@ -561,6 +900,11 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 					{
 						SetDlgItemText(hdlg, IDC_LABEL_PCIE, _T("PCI Express 2.0"));
 					}
+					else
+						if (pciex_info[0] == 3)
+						{
+							SetDlgItemText(hdlg, IDC_LABEL_PCIE, _T("PCI Express 3.0"));
+						}
 
 				//_stprintf(buf, _T("Lanes: %d"), link_width);
 				_stprintf(buf, _T("Lanes: %d"), pciex_info[1]);
@@ -616,25 +960,24 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 				EnableWindow(hWnd, FALSE);
 			}
 
-			UCHAR eeprom_data[256];
 			for(int i = 0; i < 256; i++)
-				eeprom_data[i] = 0;
-			//WriteNvRAM(eeprom_data, 256, 0x80);
+				g_bicrData[i] = 0;
+			//WriteNvRAM(g_eeprom_data, 256, 0x80);
 			//for(int i = 0; i < 256; i++)
 			if(g_DevID != 0x5520)
-				ReadNvRAM(eeprom_data, 256, 0x80);
-			USHORT btag = *(USHORT*)eeprom_data;
+				ReadNvRAM(g_bicrData, 256, 0x80);
+			USHORT btag = *(USHORT*)g_bicrData;
 			TCHAR pldDescrBuf[MAX_STRING_LEN];
 			if(btag == 0x4953)
 			{
 				TCHAR typestr[MAX_STRING_LEN];
-				ULONG ser_num = *(ULONG*)(eeprom_data+6);
-				ULONG base_type = *(USHORT*)(eeprom_data+10);
-				ULONG base_ver = *(eeprom_data+12);
+				ULONG ser_num = *(ULONG*)(g_bicrData +6);
+				ULONG base_type = *(USHORT*)(g_bicrData +10);
+				ULONG base_ver = *(g_bicrData +12);
 				BasemodName(base_type, typestr);
 				_stprintf(buf, _T("%s (0x%04X) : s/n = %d, version = %d.%d"), typestr, base_type, ser_num, base_ver>>4, base_ver&0xF);
 				SetDlgItemText(hdlg, IDC_BASESN, buf);
-				GetPldDescription(pldDescrBuf, eeprom_data, 256);
+				GetPldDescription(pldDescrBuf, g_bicrData, 256);
 				SetDlgItemText(hdlg, IDC_PLDDESCR, pldDescrBuf);
 				g_basemFlg = 1;
 			}
@@ -646,7 +989,6 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 			}
 //		dev_close();
 //	return TRUE;
-			ULONG offset_admicr = 0;
 			int subm_present[3];
 			if(fl_pex)
 			{
@@ -681,7 +1023,6 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 					else
 						_stprintf(buf, _T("IRQ min period = 1 ms"));
 					SetDlgItemText(hdlg, IDC_IRQMIN, buf);
-
 				}
 				else
 				{
@@ -720,7 +1061,7 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 						SetDlgItemText(hdlg, IDB_POWER, _T("On"));
 						SetDlgItemText(hdlg, IDC_POWSTAT, _T("Power is Off"));
 					}
-					offset_admicr = 0x400;
+					g_offset_admicr = 0x400;
 				}
 				else
 				{
@@ -762,20 +1103,20 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 			if (subm_present[0])
 			{
 				for (int i = 0; i < 32; i++)
-					eeprom_data[i] = 0;
+					g_sicrData[i] = 0;
 				if(fl_pex)
-					ReadSubICR(0, eeprom_data, 32, offset_admicr);
-				//else
-					//ReadAdmIdROM(eeprom_data, 32, offset_admicr);
-				USHORT admtag = *(USHORT*)eeprom_data;
+					ReadSubICR(0, g_sicrData, 32, g_offset_admicr);
+				else
+					ReadAdmIdROM(g_sicrData, 32, g_offset_admicr);
+				USHORT admtag = *(USHORT*)g_sicrData;
 				if (admtag == 0x0080)
 				{
 					TCHAR typestr[MAX_STRING_LEN];
-					ULONG adm_num = *(ULONG*)(eeprom_data + 7);
-					USHORT adm_type = *(USHORT*)(eeprom_data + 11);
-					UCHAR adm_ver = *(UCHAR*)(eeprom_data + 13);
+					ULONG adm_num = *(ULONG*)(g_sicrData + 7);
+					USHORT adm_type = *(USHORT*)(g_sicrData + 11);
+					UCHAR adm_ver = *(UCHAR*)(g_sicrData + 13);
 					SubmodName(adm_type, typestr);
-					_stprintf(buf, _T("Subm %s (0x%04X) : s/n = %d, version = %d.%d"),
+					_stprintf(buf, _T("%s (0x%04X) : s/n = %d, version = %d.%d"),
 						typestr, adm_type, adm_num, adm_ver >> 4, adm_ver & 0xF);
 					SetDlgItemText(hdlg, IDC_ADMSN, buf);
 					g_submFlg[0] = 1;
@@ -790,20 +1131,22 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 			{
 				SetDlgItemText(hdlg, IDC_ADMSN, _T("FM-subm1 is NOT present!!!"));
 				g_submFlg[0] = 0;
+				HWND hWnd = GetDlgItem(hdlg, IDB_SUBICR);
+				EnableWindow(hWnd, FALSE);
 			}
 			if (subm_present[1])
 			{
 				for (int i = 0; i < 32; i++)
-					eeprom_data[i] = 0;
-				ReadSubICR(1, eeprom_data, 32, offset_admicr);
+					g_s2icrData[i] = 0;
+				ReadSubICR(1, g_s2icrData, 32, g_offset_admicr);
 				//ReadAdmIdROM(eeprom_data, 32, offset_admicr);
-				USHORT admtag = *(USHORT*)eeprom_data;
+				USHORT admtag = *(USHORT*)g_s2icrData;
 				if (admtag == 0x0080)
 				{
 					TCHAR typestr[MAX_STRING_LEN];
-					ULONG adm_num = *(ULONG*)(eeprom_data + 7);
-					USHORT adm_type = *(USHORT*)(eeprom_data + 11);
-					UCHAR adm_ver = *(UCHAR*)(eeprom_data + 13);
+					ULONG adm_num = *(ULONG*)(g_s2icrData + 7);
+					USHORT adm_type = *(USHORT*)(g_s2icrData + 11);
+					UCHAR adm_ver = *(UCHAR*)(g_s2icrData + 13);
 					SubmodName(adm_type, typestr);
 					_stprintf(buf, _T("Subm2 %s (0x%04X) : s/n = %d, version = %d.%d"),
 						typestr, adm_type, adm_num, adm_ver >> 4, adm_ver & 0xF);
@@ -814,12 +1157,16 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 				{
 					SetDlgItemText(hdlg, IDC_ADM2SN, _T("Subm2 ICR is NOT detected!!!"));
 					g_submFlg[1] = 0;
+					//HWND hWnd = GetDlgItem(hdlg, IDB_SUBICR2);
+					//EnableWindow(hWnd, FALSE);
 				}
 			}
 			else
 			{
 				SetDlgItemText(hdlg, IDC_ADM2SN, _T("FM-subm2 is NOT present!!!"));
 				g_submFlg[1] = 0;
+				HWND hWnd = GetDlgItem(hdlg, IDB_SUBICR2);
+				EnableWindow(hWnd, FALSE);
 			}
 			ULONG PldStatus;
 			GetPldStatus(PldStatus, 0);
@@ -903,11 +1250,13 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 					SetDlgItemText(hdlg, IDC_PLDDESCR, pldDescrBuf);
 				}
 				TCHAR str_mem_type[MAX_STRING_LEN];
-				ULONG mem_size = GetMemorySize(str_mem_type); // в 32-разрядных словах
+				ULONG mem_size = GetMemorySize(str_mem_type, g_spdData); // в 32-разрядных словах
 				if(mem_size)
 				{
 					_stprintf(buf, _T("%s  %d MBytes"), str_mem_type, mem_size / 1024 / 256);
 					SetDlgItemText(hdlg, IDC_MEMSIZE, buf);
+					HWND hWnd = GetDlgItem(hdlg, IDB_HEXSPD);
+					EnableWindow(hWnd, TRUE);
 				}
 			}
 			else
@@ -950,6 +1299,96 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 //	SendMessage(hWndTestBtn, WM_CTLCOLORBTN, 0, (LPARAM)RGB(128, 0, 0)); // Enter text to SubItems
 //	SendMessage(hList,LVM_SETTEXTCOLOR, 0,(LPARAM)RGB(0, 128, 128));
 	return TRUE;
+}
+
+void reViewICR(HWND hdlg)
+{
+	int fl_pex = 1;
+	int err = dev_open(g_dev);
+	if (err < 0)
+	{
+		fl_pex = 0;
+		err = dev_openPlx(g_dev);
+		if (err < 0)
+			MessageBox(NULL, _T("Device open error!!!"), _T("AMBPEX Config"), MB_OK);
+	}
+	if (err >= 0)
+	{
+		TCHAR buf[MAX_STRING_LEN];
+		UCHAR eeprom_data[256];
+		for (int i = 0; i < 256; i++)
+			eeprom_data[i] = 0xFF;
+		if (g_icrFlag == 0)
+		{
+			ReadNvRAM(eeprom_data, 256, 0x80);
+			USHORT btag = *(USHORT*)eeprom_data;
+			TCHAR pldDescrBuf[MAX_STRING_LEN];
+			if (btag == 0x4953)
+			{
+				TCHAR typestr[MAX_STRING_LEN];
+				ULONG ser_num = *(ULONG*)(eeprom_data + 6);
+				ULONG base_type = *(USHORT*)(eeprom_data + 10);
+				ULONG base_ver = *(eeprom_data + 12);
+				BasemodName(base_type, typestr);
+				_stprintf(buf, _T("%s (0x%04X) : s/n = %d, version = %d.%d"), typestr, base_type, ser_num, base_ver >> 4, base_ver & 0xF);
+				SetDlgItemText(hdlg, IDC_BASESN, buf);
+				GetPldDescription(pldDescrBuf, eeprom_data, 256);
+				SetDlgItemText(hdlg, IDC_PLDDESCR, pldDescrBuf);
+				g_basemFlg = 1;
+			}
+			else
+			{
+				SetDlgItemText(hdlg, IDC_BASESN, _T("Base ICR error!!!"));
+				_stprintf(pldDescrBuf, _T("Base ICR error!!!"));
+				g_basemFlg = 0;
+			}
+		}
+		if (g_icrFlag == 1 || g_icrFlag == 2)
+		{
+			if (fl_pex)
+				ReadSubICR(g_icrFlag - 1, eeprom_data, 32, g_offset_admicr);
+			else
+				ReadAdmIdROM(eeprom_data, 32, g_offset_admicr);
+			USHORT admtag = *(USHORT*)eeprom_data;
+			if (admtag == 0x0080)
+			{
+				TCHAR typestr[MAX_STRING_LEN];
+				ULONG adm_num = *(ULONG*)(eeprom_data + 7);
+				USHORT adm_type = *(USHORT*)(eeprom_data + 11);
+				UCHAR adm_ver = *(UCHAR*)(eeprom_data + 13);
+				SubmodName(adm_type, typestr);
+				if (g_icrFlag == 1)
+				{
+					_stprintf(buf, _T("%s (0x%04X) : s/n = %d, version = %d.%d"),
+						typestr, adm_type, adm_num, adm_ver >> 4, adm_ver & 0xF);
+					SetDlgItemText(hdlg, IDC_ADMSN, buf);
+					g_submFlg[0] = 1;
+				}
+				else
+				{
+					_stprintf(buf, _T("Subm2 %s (0x%04X) : s/n = %d, version = %d.%d"),
+						typestr, adm_type, adm_num, adm_ver >> 4, adm_ver & 0xF);
+					SetDlgItemText(hdlg, IDC_ADM2SN, buf);
+					g_submFlg[1] = 1;
+				}
+			}
+			else
+			{
+				if (g_icrFlag == 1)
+				{
+					SetDlgItemText(hdlg, IDC_ADMSN, _T("Subm ICR is NOT detected!!!"));
+					g_submFlg[0] = 0;
+				}
+				else
+				{
+					SetDlgItemText(hdlg, IDC_ADM2SN, _T("Subm2 ICR is NOT detected!!!"));
+					g_submFlg[1] = 0;
+				}
+			}
+		}
+
+		dev_close();
+	}
 }
 
 int __stdcall BrowseCallbackProc(
@@ -1229,9 +1668,36 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 				//SetDlgItemText(hdlg, IDC_PLDFILENAME, szFile);
 	    		return TRUE;
 			}
-    	case IDB_ERASEICR:
+			case IDB_HEXSPD:
+			{
+				//DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hdlg, About);
+				DialogBox(hInst, (LPCTSTR)IDD_SPDVIEW, hdlg, SpdView);
+				return TRUE;
+			}
+			case IDB_BASEICR:
+			{
+				g_icrFlag = 0;
+				DialogBox(hInst, (LPCTSTR)IDD_ICRVIEW, hdlg, IcrView);
+				reViewICR(hdlg);
+				return TRUE;
+			}
+			case IDB_SUBICR:
+			{
+				g_icrFlag = 1;
+				DialogBox(hInst, (LPCTSTR)IDD_ICRVIEW, hdlg, IcrView);
+				reViewICR(hdlg);
+				return TRUE;
+			}
+			case IDB_SUBICR2:
+			{
+				g_icrFlag = 2;
+				DialogBox(hInst, (LPCTSTR)IDD_ICRVIEW, hdlg, IcrView);
+				reViewICR(hdlg);
+				return TRUE;
+			}
+			/*case IDB_ERASEICR:
     		{					// IDB_ERASEICR
-				int ret = MessageBox(NULL, _T("Base Module ICR will be ERASED!!!\n Are you sure?"), _T("AMBPEX Config"), MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING); 
+				int ret = MessageBox(NULL, _T("Base Module ICR will be ERASED!!!\n Are you sure?"), _T("AMBPEX Config"), MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING);
 				if(ret == IDYES)
 				{
 					HWND hWndEraBtn = GetDlgItem(hdlg, IDB_ERASEICR);
@@ -1277,7 +1743,7 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 					EnableWindow(hWndEraBtn, TRUE);
 				}
     			return TRUE;
-			}
+			}*/
     	case IDB_UPD:
     		{					// IDB_UPD
 				HWND hWndUpdBtn = GetDlgItem(hdlg, IDB_UPD);

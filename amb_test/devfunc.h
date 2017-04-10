@@ -51,7 +51,7 @@ void BasemodName(ULONG id, TCHAR* str);
 void SubmodName(ULONG id, TCHAR* str);
 ULONG GetPldDescription(TCHAR* Description, PUCHAR pBaseEEPROMMem, ULONG BaseEEPROMSize);
 ULONG DmaChannelTest(int tetrNum, int width);
-ULONG GetMemorySize(TCHAR* strMemType);
+ULONG GetMemorySize(TCHAR* strMemType, UCHAR* pSpdData);
 ULONG isSysMon(ULONG& smon_stat);
 double getTemp(double& maxv, double& minv);
 double getVccint(double& maxv, double& minv);

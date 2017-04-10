@@ -95,38 +95,38 @@ ULONG PCIE_info(ULONG* params)
 }
 
 //***************************************************************************************
-ULONG LinkWidth(ULONG& LinkSpeed)
-{
-	ULONG status = 0;
-	ULONG regVal = 0;
-	ULONG iaddr = 0;
-	ULONG next_addr = 0;
-	status = GetPciCfgReg(next_addr, NEXT_CAP_POINTER);
-	next_addr &= 0xff;
-
-	for(int i = 0; i < 5; i++)
-	{
-		status = GetPciCfgReg(regVal, next_addr);
-		PPEX_CAPREG pCapReg = (PPEX_CAPREG)&regVal;
-		if(pCapReg->ByBits.CapId == PEXCAPID)
-			break;
-		next_addr = pCapReg->ByBits.NextCapPointer;
-	}
-	PPEX_CAPREG pCapReg = (PPEX_CAPREG)&regVal;
-	if(pCapReg->ByBits.CapId != PEXCAPID)
-		return 0;
-		
-//	printf("Capability version = %d\n", pCapReg->ByBits.CapVer);
-//	printf("Device/Port type = %d\n", pCapReg->ByBits.DevType);
-
-	ULONG link_addr = next_addr + LINKOFFSET;
-	status = GetPciCfgReg(regVal, link_addr);
-	PPEX_LINKREG pLinkReg = (PPEX_LINKREG)&regVal;
-
-//	printf("Negotiated Link Width = %d\n", pLinkReg->ByBits.LinkWidth);
-	LinkSpeed = pLinkReg->ByBits.LinkSpeed;
-	return pLinkReg->ByBits.LinkWidth;
-}
+//ULONG LinkWidth(ULONG& LinkSpeed)
+//{
+//	ULONG status = 0;
+//	ULONG regVal = 0;
+//	ULONG iaddr = 0;
+//	ULONG next_addr = 0;
+//	status = GetPciCfgReg(next_addr, NEXT_CAP_POINTER);
+//	next_addr &= 0xff;
+//
+//	for(int i = 0; i < 5; i++)
+//	{
+//		status = GetPciCfgReg(regVal, next_addr);
+//		PPEX_CAPREG pCapReg = (PPEX_CAPREG)&regVal;
+//		if(pCapReg->ByBits.CapId == PEXCAPID)
+//			break;
+//		next_addr = pCapReg->ByBits.NextCapPointer;
+//	}
+//	PPEX_CAPREG pCapReg = (PPEX_CAPREG)&regVal;
+//	if(pCapReg->ByBits.CapId != PEXCAPID)
+//		return 0;
+//		
+////	printf("Capability version = %d\n", pCapReg->ByBits.CapVer);
+////	printf("Device/Port type = %d\n", pCapReg->ByBits.DevType);
+//
+//	ULONG link_addr = next_addr + LINKOFFSET;
+//	status = GetPciCfgReg(regVal, link_addr);
+//	PPEX_LINKREG pLinkReg = (PPEX_LINKREG)&regVal;
+//
+////	printf("Negotiated Link Width = %d\n", pLinkReg->ByBits.LinkWidth);
+//	LinkSpeed = pLinkReg->ByBits.LinkSpeed;
+//	return pLinkReg->ByBits.LinkWidth;
+//}
 
 static int extdma_sup = 0;
 static ULONG extdma_offset[2] = {0, 0};
@@ -323,6 +323,37 @@ ULONG ReadFidSpd(ULONG* BlockMem, int devnum, int devadr, UCHAR* buf, USHORT Off
 }
 
 //***************************************************************************************
+ULONG WriteFidSpd(ULONG* BlockMem, int devnum, int devadr, UCHAR* buf, USHORT Offset, int Length)
+{
+	ULONG Status = 0;
+	//ULONG* BlockMem = m_pMemBuf[0] + m_BlockFidAddr;
+	//ULONG blk_id = BlockMem[0];
+	//ULONG blk_ver = BlockMem[2];
+
+	BlockMem[42] = devnum; // SPD_DEVICE
+	BlockMem[44] = 0; // SPD_CTRL
+	PauseEx(1000);
+	if (WaitFidReady(BlockMem) != 0)
+		return 1;
+
+	for (int i = 0; i < Length; i++)
+	{
+		int sector = Offset / 256;
+		BlockMem[46] = Offset; // SPD_ADR
+		BlockMem[48] = buf[i]; // write data
+		BlockMem[44] = ((devadr + sector) << 4) + 2; // SPD_CTRL, type operation - write
+		PauseEx(10000);
+		if (WaitFidReady(BlockMem) != 0)
+			return 1;
+		Offset++;
+	}
+
+	BlockMem[44] = 0; // SPD_CTRL
+
+	return Status;
+}
+
+//***************************************************************************************
 ULONG ReadSubICR(int submod, void* pBuffer, ULONG BufferSize, ULONG Offset)
 {
 	ULONG Status = 0;
@@ -343,6 +374,34 @@ ULONG ReadSubICR(int submod, void* pBuffer, ULONG BufferSize, ULONG Offset)
 	{
 		if(!submod)
 			Status = ReadAdmIdROM(pBuffer, BufferSize, Offset);
+		else
+			Status = 1;
+	}
+	return Status;
+}
+
+//***************************************************************************************
+ULONG WriteSubICR(int submod, PVOID pBuffer, ULONG BufferSize, ULONG Offset)
+{
+	ULONG Status = 0;
+	PULONG addrBlocks;
+	ULONG addrFID = GetBlockFidAddress(addrBlocks);
+	if (addrFID)
+	{
+		ULONG* BlockMem = addrBlocks + addrFID;
+		//memcpy(EepromSubmod + Offset, pBuffer, BufferSize);
+		if (submod)
+		{
+			Status = WriteFidSpd(BlockMem, 2, 0x50, (UCHAR*)pBuffer, 0x400, BufferSize); // FMC2
+			//Status = ReadFidSpd(BlockMem, 2, 0x50, EepromSubmod, 0x400, 256); // FMC2
+		}
+		else
+			Status = WriteFidSpd(BlockMem, 0, 0x50, (UCHAR*)pBuffer, 0x400, BufferSize); // FMC1
+	}
+	else
+	{
+		if (!submod)
+			Status = WriteAdmIdROM(pBuffer, BufferSize, Offset);
 		else
 			Status = 1;
 	}
@@ -1085,10 +1144,21 @@ ULONG DmaChannelTest(int tetrNum, int width)
 	PVOID pBuf = NULL; // указатель на массив указателей на блоки (возвращается функцией AllocMemory)
 
 	printf("Allocating Memory...!!!\r");
-	status = AllocMemory(&pBuf, blkSize, blkNum, isSysMem, dir, addr, dmaChan);
+	for (int i = 0; i < 4; i++)
+	{
+		status = AllocMemory(&pBuf, blkSize, blkNum, isSysMem, dir, addr, dmaChan);
+		if (status)
+			blkSize >>= 1;
+		else
+			break;
+	}
 	if(status)
+	{
 		//printf("AllocMemory: ERROR !!!\n");
-		MessageBox(NULL, _T("Allocate memory is ERROR!!!"), _T("ISDCLASS"), MB_OK); 
+		//MessageBox(NULL, _T("Allocate memory is ERROR!!!"), _T("ISDCLASS"), MB_OK); 
+		_stprintf(err_msg, _T("Allocate memory is ERROR!!!\n Block size = %d bytes"), blkSize << 1);
+		MessageBox(NULL, err_msg, _T("ISDCLASS"), MB_OK);
+	}
 	else
 	{
 		printf("Memory is Allocated!!!  (%d block)\n", blkNum);
@@ -1238,10 +1308,12 @@ ULONG DmaChannelTest(int tetrNum, int width)
 					}
 				}
 			}
+			
 			if (cnt_err)
-				MessageBox(NULL, _T("MAIN tetrad test is ERROR!!!"), _T("ISDCLASS"), MB_OK);
+				_stprintf(err_msg, _T("MAIN tetrad test is ERROR!!!\n Block size = %d bytes"), blkSize / 1024);
 			else
-				MessageBox(NULL, _T("MAIN tetrad test is SUCCESS!!!"), _T("ISDCLASS"), MB_OK);
+				_stprintf(err_msg, _T("MAIN tetrad test is SUCCESS!!!\n Block size = %d kBytes"), blkSize / 1024);
+			MessageBox(NULL, err_msg, _T("ISDCLASS"), MB_OK);
 			status = FreeMemory(dmaChan);
 		}
 	}
@@ -1389,6 +1461,8 @@ void MemoryManufacturer(unsigned __int64 id, TCHAR* str)
 
 		case 0x0000000000001635:    lstrcpy(str, _T("Kingston")); break; // DDR4
 
+		case 0x00C17F7F7F7F7F7F:    lstrcpy(str, _T("ASint Technology")); break;
+
 		default: lstrcpy(str, _T("InSys")); break;
 	}
 }
@@ -1517,7 +1591,7 @@ void MemoryManufacturer(unsigned __int64 id, TCHAR* str)
 //}
 
 //***************************************************************************************
-ULONG GetMemorySize(TCHAR* strMemType)
+ULONG GetMemorySize(TCHAR* strMemType, UCHAR* pSpdData)
 {
 	ULONG memTetrID = 0;
 	long MemTetrNum = GetMemTetrNum(memTetrID);
@@ -1531,6 +1605,9 @@ ULONG GetMemorySize(TCHAR* strMemType)
 	SDRAM_SPDCTRL SpdCtrl;
 	SpdCtrl.AsWhole = 0;
 	SpdCtrl.ByBits.Read = 1;
+
+	for (int k = 0; k < 256; k++)
+		pSpdData[k] = ReadSpdByte(MemTetrNum, k, SpdCtrl.AsWhole);
 
 	UCHAR mem_type[SDRAM_MAXSLOTS];
 	SpdCtrl.ByBits.Slot = 0;

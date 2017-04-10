@@ -219,6 +219,7 @@ ULONG WriteNvRAM(PVOID pBuffer, ULONG BufferSize, ULONG Offset);
 ULONG ReadSubICR(int submod, void* pBuffer, ULONG BufferSize, ULONG Offset);
 ULONG ReadAdmIdROM(PVOID pBuffer, ULONG BufferSize, ULONG Offset);
 // записать ППЗУ субмодуля
+ULONG WriteSubICR(int submod, void* pBuffer, ULONG BufferSize, ULONG Offset);
 ULONG WriteAdmIdROM(PVOID pBuffer, ULONG BufferSize, ULONG Offset);
 // получить состояние ПЛИС
 ULONG GetPldStatus(ULONG& PldStatus, ULONG PldNum);

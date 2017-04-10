@@ -56,15 +56,36 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG 22, 17, 230, 75
+IDD_ABOUTBOX DIALOGEX 22, 17, 230, 75
 STYLE DS_SETFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
-FONT 8, "System"
+FONT 8, "System", 0, 0, 0x0
 BEGIN
-    ICON            107,IDC_MYICON,14,9,16,16
+    ICON            107,IDC_MYICON,14,9,20,20
     LTEXT           "ambpex_cfg Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2012",IDC_STATIC,49,20,119,8
     DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
+END
+
+IDD_SPDVIEW DIALOGEX 280, 100, 183, 149
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "SPD of memory"
+FONT 8, "MS Sans Serif", 400, 0, 0xCC
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,115,128,40,12,WS_GROUP
+    PUSHBUTTON      "Into &File...",IDC_SPDFILEBROWSE,41,128,40,12
+    LTEXT           "spd data spd data spd data spd data spd data spd data spd data spd data spd data spd data spd data spd data",IDC_SPDDATA,7,8,168,114,SS_NOPREFIX,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
+END
+
+IDD_ICRVIEW DIALOGEX 280, 30, 183, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "ICR"
+FONT 8, "MS Sans Serif", 400, 0, 0xCC
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,126,137,40,12,WS_GROUP
+    PUSHBUTTON      "Into &File...",IDC_ICRFILEBROWSE,71,137,40,12
+    LTEXT           "icr data icr data icr data icr data icr data icr data icr data icr data icr data icr data icr data icr data",IDC_ICRDATA,7,8,168,125,SS_NOPREFIX,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
+    PUSHBUTTON      "&Clear",IDC_ICRCLEAR,18,137,40,12
 END
 
 
@@ -102,8 +123,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,4,0
- PRODUCTVERSION 1,1,4,0
+ FILEVERSION 1,1,5,0
+ PRODUCTVERSION 1,1,5,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -121,24 +142,24 @@ BEGIN
             VALUE "Comments", "Needs the WDM drivers only (wambp.sys/wambp64.sys/wambpex.sys/wambpex64.sys)"
             VALUE "CompanyName", "Instrumental System"
             VALUE "FileDescription", "Configuration & diagnostic PCI & PCIEx boards (AMBPCX/AMBPEX2, AMBPEX8/FMC105P and others)"
-            VALUE "FileVersion", "1.1.4.0"
+            VALUE "FileVersion", "1.1.5.0"
             VALUE "InternalName", "ambpex_cfg"
-            VALUE "LegalCopyright", "Copyright (C) 2011-2016"
+            VALUE "LegalCopyright", "Copyright (C) 2011-2017"
             VALUE "OriginalFilename", "ambpex_cfg.exe"
             VALUE "ProductName", "AMBPEX CONFIGURATION & DIAGNOSTIC"
-            VALUE "ProductVersion", "1.1.4.0"
+            VALUE "ProductVersion", "1.1.5.0"
         END
         BLOCK "041904b0"
         BEGIN
             VALUE "Comments", "Нуждается только в WDM драйвере  (wambp.sys/wambp64.sys/wambpex.sys/wambpex64.sys)"
             VALUE "CompanyName", "Инструментальные Системы"
             VALUE "FileDescription", "Конфигурация и диагностика PCI & PCIEx платах (AMBPCX/AMBPEX2, AMBPEX8/FMC105P и других)"
-            VALUE "FileVersion", "1.1.4.0"
+            VALUE "FileVersion", "1.1.5.0"
             VALUE "InternalName", "ambpex_cfg"
-            VALUE "LegalCopyright", "Copyright (C) 2011-2016"
+            VALUE "LegalCopyright", "Copyright (C) 2011-2017"
             VALUE "OriginalFilename", "ambpex_cfg.exe"
             VALUE "ProductName", "AMBPEX CONFIGURATION & DIAGNOSTIC"
-            VALUE "ProductVersion", "1.1.4.0"
+            VALUE "ProductVersion", "1.1.5.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -146,6 +167,33 @@ BEGIN
         VALUE "Translation", 0x9, 1200, 0x419, 1200
     END
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+    END
+
+    IDD_SPDVIEW, DIALOG
+    BEGIN
+        RIGHTMARGIN, 178
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_ICRVIEW, DIALOG
+    BEGIN
+        RIGHTMARGIN, 178
+        BOTTOMMARGIN, 149
+    END
+END
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -181,7 +229,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "AMBPEX Configuration"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    CTEXT           "Subm s/n",IDC_ADMSN,30,15,230,9,SS_CENTERIMAGE
+    CTEXT           "Subm s/n",IDC_ADMSN,30,14,205,9,SS_CENTERIMAGE
     GROUPBOX        "PCI Express",IDC_LABEL_PCIE,7,37,265,47
     LTEXT           "Lanes: 99 0000",IDC_LINKWIDTH,18,47,53,9
     LTEXT           "Controller: 99.99",IDC_PCIECINFO,79,47,57,9
@@ -190,8 +238,8 @@ BEGIN
     LTEXT           "PLD info",IDC_PLDINFO,145,159,100,9
     LTEXT           "Driver's version",IDC_VERSION,9,291,62,12
     PUSHBUTTON      "&Close",IDOK,203,289,50,14
-    CTEXT           "base s/n",IDC_BASESN,43,3,180,9,SS_NOTIFY | SS_CENTERIMAGE
-    ICON            IDI_AMBICON,IDC_CLASSICON,7,3,21,20
+    CTEXT           "base s/n",IDC_BASESN,43,4,180,9,SS_NOTIFY | SS_CENTERIMAGE
+    ICON            IDI_AMBICON,IDC_CLASSICON,7,3,20,20
     PUSHBUTTON      "&Diagnostic",IDB_TEST,144,289,50,14
     DEFPUSHBUTTON   "&Power",IDB_POWER,139,99,50,14
     GROUPBOX        "FMC Power",IDC_LABEL_FMCPOW,7,89,265,31
@@ -215,8 +263,11 @@ BEGIN
     PUSHBUTTON      "&L",IDB_LOAD,254,179,12,12
     LTEXT           "Max Payload (Suppordet): 2048 (2048) bytes",IDC_PCIE_PAYLOAD,118,59,145,9
     LTEXT           "IRQ min period: unknown",IDC_IRQMIN,17,69,119,9
-    PUSHBUTTON      "&E",IDB_ERASEICR,253,2,12,12
-    CTEXT           "Subm2 s/n",IDC_ADM2SN,30,24,230,9,SS_CENTERIMAGE
+    PUSHBUTTON      "...",IDB_BASEICR,248,4,12,8,BS_BOTTOM
+    CTEXT           "Subm2 s/n",IDC_ADM2SN,29,24,206,9,SS_CENTERIMAGE
+    PUSHBUTTON      "&SPD...",IDB_HEXSPD,240,128,27,12,WS_DISABLED
+    PUSHBUTTON      "...",IDB_SUBICR,248,14,12,8,BS_BOTTOM
+    PUSHBUTTON      "...",IDB_SUBICR2,248,24,12,8,BS_BOTTOM
 END
 
 
@@ -228,6 +279,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_AMBICON             ICON                    "ambpex_cfg.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
