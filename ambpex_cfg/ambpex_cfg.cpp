@@ -1004,10 +1004,10 @@ int CFG_OnInitDialog(HWND hdlg, HWND hwndFocus, LPARAM lParam)
 					SetDlgItemText(hdlg, IDC_PCIECINFO, buf);
 					ULONG extdma_sup = (pcic_info.dmaver & 0xF0000000) >> 28;
 					if(extdma_sup)
-						_stprintf(buf, _T("DMA channel (Ext): %d.%02d"), 
+						_stprintf(buf, _T("DMA channel (Ext): %d.%d"), 
 							(pcic_info.dmaver & 0xFFFF) >> 8, pcic_info.dmaver & 0xff);
 					else
-						_stprintf(buf, _T("DMA channel: %d.%02d"), 
+						_stprintf(buf, _T("DMA channel: %d.%d"), 
 							(pcic_info.dmaver & 0xFFFF) >> 8, pcic_info.dmaver & 0xff);
 					SetDlgItemText(hdlg, IDC_PCIECINFO2, buf);
 					g_DmaChanVerFlg = (pcic_info.dmaver < 0x103) ? 0 : 1;
@@ -1925,6 +1925,11 @@ LRESULT CALLBACK MainDlgProc(HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 						{
 							MessageBox(NULL, _T("PLD (DMA channel version < 1.3) consists error:\nBug#147 - there is a chance the DMA channel is stopped.\nUpdate that PLD!!!"),
 											_T("AMBPEX Config"), MB_OK); 
+						}
+						if (pcic_info.dmaver == 0x107)
+						{
+							MessageBox(NULL, _T("PLD (DMA channel version = 1.7) consists error:\nBug#2362 - error by DMA restart.\nUpdate that PLD!!!"),
+								_T("AMBPEX Config"), MB_OK);
 						}
 						if(pcic_info.errcrc != (ULONG)-1 && pcic_info.errcrc)
 						{
