@@ -276,7 +276,9 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 	g_pMemDescrip[DmaChan]->MemType = isSysMem;
 	g_pMemDescrip[DmaChan]->BlockCnt = blkNum;
 	g_pMemDescrip[DmaChan]->BlockSize = blkSize;
+#ifdef _WIN32
 	g_pMemDescrip[DmaChan]->hBlockEndEvent = g_hBlockEndEvent[DmaChan];
+#endif
 #ifdef _WIN64
 	g_pMemDescrip[DmaChan]->hTransEndEvent = g_OvlStartStream[DmaChan].hEvent;
 #endif
@@ -287,7 +289,8 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 			g_pMemDescrip[DmaChan]->pBlock[iBlk] = NULL;
 		else
 			//			g_pMemDescrip[DmaChan]->pBlock[iBlk] = new UCHAR[blkSize];
-			g_pMemDescrip[DmaChan]->pBlock[iBlk] = VirtualAlloc(NULL, blkSize, MEM_COMMIT, PAGE_READWRITE);
+			g_pMemDescrip[DmaChan]->pBlock[iBlk] = IPC_virtAlloc(blkSize);
+			//g_pMemDescrip[DmaChan]->pBlock[iBlk] = VirtualAlloc(NULL, blkSize, MEM_COMMIT, PAGE_READWRITE);
 	}
 
 	//ULONG   length;
@@ -341,7 +344,8 @@ unsigned long FreeMemory(int DmaChan)
 	{
 		for (ULONG iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++)
 			//			delete g_pMemDescrip[DmaChan]->pBlock[iBlk];
-			VirtualFree(g_pMemDescrip[DmaChan]->pBlock[iBlk], 0, MEM_RELEASE);
+			IPC_virtFree(g_pMemDescrip[DmaChan]->pBlock[iBlk]);
+			//VirtualFree(g_pMemDescrip[DmaChan]->pBlock[iBlk], 0, MEM_RELEASE);
 	}
 	delete g_pMemDescrip[DmaChan];
 	g_pMemDescrip[DmaChan] = NULL;
@@ -384,8 +388,14 @@ unsigned long StartDma(int IsCycling, int DmaChan)
 #else
 				&(g_OvlStartStream[DmaChan]));
 #endif
-			if(ret == IPC_GENERAL_ERROR)
+			if (ret == IPC_GENERAL_ERROR)
+			{
 				ret = GetLastError();
+#ifdef _WIN32
+				if (ret == ERROR_IO_PENDING)
+					ret = IPC_OK;
+#endif
+			}
 		}
 		else
 #endif

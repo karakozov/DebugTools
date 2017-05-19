@@ -320,11 +320,11 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		Sleep(1);
 		status = ResetDmaFifo(dmaChan);
 		status = StartDma(0, dmaChan); // без зацикливания
-		if(status && (status != ERROR_IO_PENDING))
-			printf("StartDma: ERROR (DMA channel %d)!!!\n", dmaChan);
-		else
+		if(status == IPC_OK)
 			printf("StartDma: Success (DMA channel %d)!!!\n", dmaChan);
-		
+		else
+			printf("StartDma: ERROR (DMA channel %d)!!!\n", dmaChan);
+
 		//regVal = 0x2010; // HF, MASTER
 		//status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
 		regVal = 0x2038; // HF, START, MASTER, DRQ_EN
