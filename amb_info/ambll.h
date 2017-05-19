@@ -26,6 +26,7 @@
 #ifdef __linux__
 #include <linux/types.h>
 #ifndef __KERNEL__
+#include <stdint.h>
 #include <sys/ioctl.h>
 #endif
 
@@ -88,24 +89,27 @@
 #define __packed __attribute__((packed))
 #endif
 
-#ifdef __KERNEL__
+#if defined(__KERNEL__) || defined(__LINUX__)
 
-typedef u32 ULONG;
-typedef s32 LONG;
-typedef u8  UCHAR;
-typedef u32 UINT;
-typedef u16 USHORT;
+typedef unsigned long ULONG;
+typedef unsigned long* PULONG;
+typedef signed long   LONG;
+typedef unsigned char  UCHAR;
+typedef unsigned long UINT;
+typedef signed long long  __int64;
+typedef unsigned short USHORT;
 typedef void* PVOID;
 typedef void* HANDLE;
 
 //! Описывает параметры для команд управления устройством
+/*
 struct ioctl_param {
     void    *srcBuf;       //!< буфер с данными для устройства (через него передаются данные В драйвер нулевого кольца)
     size_t  srcSize;        //!< размер буфера с данными для устройства
     void    *dstBuf;       //!< буфер с данными от устройства  (через него передаются данные ИЗ драйвера нулевого кольца)
     size_t  dstSize;        //!< dstSize - размер буфера с данными от устройства
 } __packed;
-
+*/
 #endif
 
 // data structure for read/write value from/to register of board
