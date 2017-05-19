@@ -314,16 +314,19 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		}
 		regVal = 2; // FIFO_RESET
 		status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
-		Sleep(1);
+		IPC_delay(1);
 		regVal = 0;
 		status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
-		Sleep(1);
+		IPC_delay(1);
 		status = ResetDmaFifo(dmaChan);
 		status = StartDma(0, dmaChan); // без зацикливания
+/*
+		#error in linux build
 		if(status && (status != ERROR_IO_PENDING))
 			printf("StartDma: ERROR (DMA channel %d)!!!\n", dmaChan);
 		else
 			printf("StartDma: Success (DMA channel %d)!!!\n", dmaChan);
+*/
 		
 		//regVal = 0x2010; // HF, MASTER
 		//status = WriteRegData(0, tetrNum, 0, regVal); // MODE0 (DIO64_IN | MAIN tetrad)
@@ -344,7 +347,7 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		//		status = ReadLocalBusReg(regVal, PEFIFOadr_IRQ_CNT + extdma_offset[dmaChan], 2);
 		//		if(regVal)
 		//			break;
-		//		Sleep(50);
+		//		IPC_delay(50);
 		//	}
 		//}
 		//else		
