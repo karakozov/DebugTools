@@ -26,6 +26,7 @@
 #ifdef __linux__
 #include <linux/types.h>
 #ifndef __KERNEL__
+#include <stdint.h>
 #include <sys/ioctl.h>
 #endif
 
@@ -88,26 +89,6 @@
 #define __packed __attribute__((packed))
 #endif
 
-#ifdef __KERNEL__
-
-typedef u32 ULONG;
-typedef s32 LONG;
-typedef u8  UCHAR;
-typedef u32 UINT;
-typedef u16 USHORT;
-typedef void* PVOID;
-typedef void* HANDLE;
-
-//! Описывает параметры для команд управления устройством
-struct ioctl_param {
-    void    *srcBuf;       //!< буфер с данными для устройства (через него передаются данные В драйвер нулевого кольца)
-    size_t  srcSize;        //!< размер буфера с данными для устройства
-    void    *dstBuf;       //!< буфер с данными от устройства  (через него передаются данные ИЗ драйвера нулевого кольца)
-    size_t  dstSize;        //!< dstSize - размер буфера с данными от устройства
-} __packed;
-
-#endif
-
 // data structure for read/write value from/to register of board
 typedef struct _AMB_DATA_REG {
 	unsigned long	AdmNumber;		// IN
@@ -162,37 +143,37 @@ typedef struct _AMB_TETR_IRQ {
 } __packed AMB_TETR_IRQ, *PAMB_TETR_IRQ;
 
 typedef struct _AMB_MEM_DMA_CHANNEL {
-	ULONG	DmaChanNum;		// IN
-	ULONG	Direction;
-	ULONG	LocalAddr;
-	ULONG	MemType;
-	ULONG	BlockCnt;
-	ULONG	BlockSize;
-	PVOID	pStub;
-	HANDLE	hBlockEndEvent;
+	unsigned long	DmaChanNum;		// IN
+	unsigned long	Direction;
+	unsigned long	LocalAddr;
+	unsigned long	MemType;
+	unsigned long	BlockCnt;
+	unsigned long	BlockSize;
+	void*	pStub;
+	void*	hBlockEndEvent; // HANDLE of block end event
 #ifdef _WIN64
-	HANDLE	hTransEndEvent;
+	HANDLE	hTransEndEvent; // HANDLE of transfer (buffer) end event
 #endif
-	PVOID	pBlock[1];
+	void*	pBlock[1];
 } __packed AMB_MEM_DMA_CHANNEL, *PAMB_MEM_DMA_CHANNEL;
 
 typedef struct _AMB_START_DMA_CHANNEL {
-	ULONG	DmaChanNum;		// IN
-	ULONG	IsCycling;
+	unsigned long	DmaChanNum;		// IN
+	unsigned long	IsCycling;
 } __packed AMB_START_DMA_CHANNEL, *PAMB_START_DMA_CHANNEL;
 
 typedef struct _AMB_STATE_DMA_CHANNEL {
-	ULONG	DmaChanNum;		// IN
-	LONG	BlockNum;		// OUT
-	ULONG	BlockCntTotal;	// OUT
-	ULONG	OffsetInBlock;	// OUT		
-	ULONG	DmaChanState;	// OUT		
-	LONG	Timeout;		// IN
+	unsigned long	DmaChanNum;		// IN
+	long	BlockNum;		// OUT
+	unsigned long	BlockCntTotal;	// OUT
+	unsigned long	OffsetInBlock;	// OUT		
+	unsigned long	DmaChanState;	// OUT		
+	long	Timeout;		// IN
 } __packed AMB_STATE_DMA_CHANNEL, *PAMB_STATE_DMA_CHANNEL;
 
 typedef struct _AMB_SET_DMA_CHANNEL {
-	ULONG	DmaChanNum;		// IN
-	ULONG	Param;
+	unsigned long	DmaChanNum;		// IN
+	unsigned long	Param;
 } __packed AMB_SET_DMA_CHANNEL, *PAMB_SET_DMA_CHANNEL;
 
 // DMA buffer Directions 

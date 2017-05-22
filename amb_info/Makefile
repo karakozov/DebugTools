@@ -1,48 +1,25 @@
-#
-#change this makefile for your target...
-#
-
-ifeq "$(findstring QNX, $(shell uname -a))" "QNX"
-    OS := DZY_QNX
-    DEF_TYPES := __QNX__
-else
-    OS := DZY_LINUX
-    DEF_TYPES := __LINUX__
-endif
 
 PHONY = clean
 TARGET_NAME = amb_info
 
-all: $(TARGET_NAME)
+include $(BARDYDIR)/make/macros.mk
 
-LIBPATH  = ../bin
-
-DIRS := ../../_GIPCY/include .
+DIRS := $(GIPCYINC)
+#DIRS += $(BARDYDIR)/BRDINC
+#DIRS += $(BARDYDIR)/BRDINC/ctrladmpro
+#DIRS += $(BARDYDIR)/IcrInc
+#DIRS += $(BARDYDIR)/BRDLIBS
 
 INC := $(addprefix  -I, $(DIRS))
 
-CC = g++
-LD = g++
+CFLAGS += $(INC)
 
-CFLAGS = -g -Wall -D__IPC_LINUX__ -D$(OS) -D$(DEF_TYPES) $(INC)
-LFLAGS = -Wl,-rpath $(LIBPATH) -L"$(LIBPATH)" -lgipcy
+SRC := $(wildcard *.cpp)
+SOURCE += $(SRC)
+OBJ_FILES := $(SOURCE:.cpp=.o)
 
-$(TARGET_NAME): $(patsubst %.cpp,%.o, $(wildcard *.cpp))
-	$(LD) -o $(TARGET_NAME) $(notdir $^) $(LFLAGS)
+all: $(TARGET_NAME)
 
-	rm -f *.o *~ core
-
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c -MD $<
-	
-include $(wildcard *.d)
-
-clean:
-	rm -f *.o *~ core
-	rm -f *.d *~ core
-	rm -f $(TARGET_NAME)
-	
-distclean:
-	rm -f *.o *~ core
-	rm -f *.d *~ core
-	rm -f $(TARGET_NAME)
+include $(BARDYDIR)/make/rules.mk
+include $(BARDYDIR)/make/clean.mk
+include $(BARDYDIR)/make/app.mk
