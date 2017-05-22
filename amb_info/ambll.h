@@ -91,32 +91,32 @@
 
 // data structure for read/write value from/to register of board
 typedef struct _AMB_DATA_REG {
-	unsigned long	AdmNumber;		// IN
-	unsigned long	TetrNumber;		// IN
-	unsigned long	RegNumber;		// IN
-	unsigned long	Value;			// INOUT
+    unsigned int	AdmNumber;		// IN
+    unsigned int	TetrNumber;		// IN
+    unsigned int	RegNumber;		// IN
+    unsigned int	Value;			// INOUT
 } __packed AMB_DATA_REG, *PAMB_DATA_REG;
 
 // data structure for read/write buffer from/to register of board
 typedef struct _AMB_BUF_REG {
-	unsigned long	AdmNumber;		// IN
-	unsigned long	TetrNumber;		// IN
-	unsigned long	RegNumber;		// IN
-	void*	pBuffer;		// IN
-	unsigned long	BufferSize;		// IN
+    unsigned int	AdmNumber;		// IN
+    unsigned int	TetrNumber;		// IN
+    unsigned int	RegNumber;		// IN
+    void*           pBuffer;		// IN
+    unsigned int	BufferSize;		// IN
 } __packed AMB_BUF_REG, *PAMB_BUF_REG;
 
 typedef struct _AMB_DATA_BUF {
-	void*	pBuffer;
-	unsigned long	BufferSize;
-	unsigned long	Offset;
+    void*           pBuffer;
+    unsigned int	BufferSize;
+    unsigned int	Offset;
 } __packed AMB_DATA_BUF, *PAMB_DATA_BUF;
 
 // board location data structure
 typedef struct _AMB_LOCATION {
-	unsigned long	BusNumber;		// OUT
-	unsigned long	DeviceNumber;	// OUT 
-	unsigned long	SlotNumber;		// OUT
+    unsigned int	BusNumber;		// OUT
+    unsigned int	DeviceNumber;	// OUT
+    unsigned int	SlotNumber;		// OUT
 } __packed AMB_LOCATION, *PAMB_LOCATION;
 
 // board configuration data structure
@@ -128,27 +128,27 @@ typedef struct _AMB_CONFIGURATION {
 #endif
 	//ULONG	VirtAddress[3];	// OUT
 	void*	VirtAddress[3];	// OUT
-	unsigned long	Size[3];		// OUT
-	unsigned long	InterruptLevel;	// OUT 
-	unsigned long	InterruptVector;// OUT
+    unsigned int	Size[3];		// OUT
+    unsigned int	InterruptLevel;	// OUT
+    unsigned int	InterruptVector;// OUT
 } __packed AMB_CONFIGURATION, *PAMB_CONFIGURATION;
 
 // tetrad interrupt request data structure
 typedef struct _AMB_TETR_IRQ {
-	unsigned long	AdmNumber;		// IN
-	unsigned long	TetrNumber;		// IN
-	unsigned long	IrqMask;		// IN
-	unsigned long	IrqInv;			// IN
+    unsigned int	AdmNumber;		// IN
+    unsigned int	TetrNumber;		// IN
+    unsigned int	IrqMask;		// IN
+    unsigned int	IrqInv;			// IN
 	IPC_handle	hTetrEvent;		// IN
 } __packed AMB_TETR_IRQ, *PAMB_TETR_IRQ;
 
 typedef struct _AMB_MEM_DMA_CHANNEL {
-	unsigned long	DmaChanNum;		// IN
-	unsigned long	Direction;
-	unsigned long	LocalAddr;
-	unsigned long	MemType;
-	unsigned long	BlockCnt;
-	unsigned long	BlockSize;
+    unsigned int	DmaChanNum;		// IN
+    unsigned int	Direction;
+    unsigned int	LocalAddr;
+    unsigned int	MemType;
+    unsigned int	BlockCnt;
+    unsigned int	BlockSize;
 	void*	pStub;
 	void*	hBlockEndEvent; // HANDLE of block end event
 #ifdef _WIN64
@@ -158,22 +158,22 @@ typedef struct _AMB_MEM_DMA_CHANNEL {
 } __packed AMB_MEM_DMA_CHANNEL, *PAMB_MEM_DMA_CHANNEL;
 
 typedef struct _AMB_START_DMA_CHANNEL {
-	unsigned long	DmaChanNum;		// IN
-	unsigned long	IsCycling;
+    unsigned int	DmaChanNum;		// IN
+    unsigned int	IsCycling;
 } __packed AMB_START_DMA_CHANNEL, *PAMB_START_DMA_CHANNEL;
 
 typedef struct _AMB_STATE_DMA_CHANNEL {
-	unsigned long	DmaChanNum;		// IN
-	long	BlockNum;		// OUT
-	unsigned long	BlockCntTotal;	// OUT
-	unsigned long	OffsetInBlock;	// OUT		
-	unsigned long	DmaChanState;	// OUT		
-	long	Timeout;		// IN
+    unsigned int	DmaChanNum;		// IN
+    int             BlockNum;		// OUT
+    unsigned int	BlockCntTotal;	// OUT
+    unsigned int	OffsetInBlock;	// OUT
+    unsigned int	DmaChanState;	// OUT
+    int             Timeout;		// IN
 } __packed AMB_STATE_DMA_CHANNEL, *PAMB_STATE_DMA_CHANNEL;
 
 typedef struct _AMB_SET_DMA_CHANNEL {
-	unsigned long	DmaChanNum;		// IN
-	unsigned long	Param;
+    unsigned int	DmaChanNum;		// IN
+    unsigned int	Param;
 } __packed AMB_SET_DMA_CHANNEL, *PAMB_SET_DMA_CHANNEL;
 
 // DMA buffer Directions 

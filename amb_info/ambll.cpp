@@ -6,8 +6,8 @@
 
 IPC_handle g_hWDM = NULL;
 #ifdef _WIN32
-OVERLAPPED g_OvlStartStream[2];	// событие окончания всего составного буфера
-HANDLE g_hBlockEndEvent[2];	// событие окончания блока
+OVERLAPPED g_OvlStartStream[2];	// СЃРѕР±С‹С‚РёРµ РѕРєРѕРЅС‡Р°РЅРёСЏ РІСЃРµРіРѕ СЃРѕСЃС‚Р°РІРЅРѕРіРѕ Р±СѓС„РµСЂР°
+HANDLE g_hBlockEndEvent[2];	// СЃРѕР±С‹С‚РёРµ РѕРєРѕРЅС‡Р°РЅРёСЏ Р±Р»РѕРєР°
 #endif
 PAMB_MEM_DMA_CHANNEL g_pMemDescrip[2] = { NULL, NULL };
 int g_DescripSize[2];
@@ -23,10 +23,10 @@ enum
 
 typedef struct
 {
-    long	lastBlock;				// Number of Block which was filled last Time
-    unsigned long	totalCounter;			// Total Counter of all filled Block
-    unsigned long	offset;					// First Unfilled Byte
-    unsigned long	state;					// CBUF local state
+    int	lastBlock;                          // Number of Block which was filled last Time
+    unsigned int	totalCounter;			// Total Counter of all filled Block
+    unsigned int	offset;					// First Unfilled Byte
+    unsigned int	state;					// CBUF local state
 } BRDstrm_Stub, *PBRDstrm_Stub, BRDctrl_StreamStub, *PBRDctrl_StreamStub;
 
 typedef enum _AMB_Errors {
@@ -45,7 +45,7 @@ typedef enum _AMB_Errors {
 } AMB_Errors;
 
 #ifdef __linux__
-unsigned long GetLastError(void)
+unsigned int GetLastError(void)
 {
 	//printf("GetLastError(): %s\n", strerror(IPC_sysError()));
 	//return -1;
@@ -54,8 +54,8 @@ unsigned long GetLastError(void)
 #endif
 
 //******************** dev_open ******************
-// Эта функция открывает драйвер устройства
-// int DeviceNumber - номер экземпляра нужного базового модуля
+// Р­С‚Р° С„СѓРЅРєС†РёСЏ РѕС‚РєСЂС‹РІР°РµС‚ РґСЂР°Р№РІРµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІР°
+// int DeviceNumber - РЅРѕРјРµСЂ СЌРєР·РµРјРїР»СЏСЂР° РЅСѓР¶РЅРѕРіРѕ Р±Р°Р·РѕРІРѕРіРѕ РјРѕРґСѓР»СЏ
 //************************************************
 int dev_open(IPC_str *deviceName, int DeviceNumber)
 {
@@ -80,10 +80,10 @@ void dev_close()
 }
 
 //***************************************************************************************
-unsigned long GetVersion(char* pVerInfo)
+unsigned int GetVersion(char* pVerInfo)
 {
 	int ret = 0;
-    //	unsigned long   length;
+    //	unsigned int   length;
 	//char Buf[MAX_STRING_LEN];
 
 	ret = IPC_ioctlDevice(
@@ -99,7 +99,7 @@ unsigned long GetVersion(char* pVerInfo)
 }
 
 //***************************************************************************************
-unsigned long GetLocation(unsigned long& SlotNumber, unsigned long& BusNumber, unsigned long& DeviceNumber)
+unsigned int GetLocation(unsigned int& SlotNumber, unsigned int& BusNumber, unsigned int& DeviceNumber)
 {
 	int ret = 0;
 	AMB_LOCATION AmbLocation;
@@ -119,14 +119,14 @@ unsigned long GetLocation(unsigned long& SlotNumber, unsigned long& BusNumber, u
 }
 
 //***************************************************************************************
-unsigned long GetDeviceID(unsigned short& DeviceID)
+unsigned int GetDeviceID(unsigned short& DeviceID)
 {
 	int ret = 0;
-    //	unsigned long   length;     // the return length from the driver
+    //	unsigned int   length;     // the return length from the driver
 	AMB_DATA_BUF PciConfigPtr =
 	{ NULL, sizeof(short), 2 };
 
-    //unsigned long sss = sizeof(AMB_DATA_BUF);
+    //unsigned int sss = sizeof(AMB_DATA_BUF);
 
 	ret = IPC_ioctlDevice(
 		g_hWDM,
@@ -140,12 +140,12 @@ unsigned long GetDeviceID(unsigned short& DeviceID)
 }
 
 //***************************************************************************************
-unsigned long GetPldStatus(unsigned long& PldStatus, unsigned long PldNum)
+unsigned int GetPldStatus(unsigned int& PldStatus, unsigned int PldNum)
 {
 	int ret = 0;
 
-	unsigned long num = PldNum;
-	unsigned long Status;
+    unsigned int num = PldNum;
+    unsigned int Status;
 
 	ret = IPC_ioctlDevice(
 		g_hWDM,
@@ -161,7 +161,7 @@ unsigned long GetPldStatus(unsigned long& PldStatus, unsigned long PldNum)
 }
 
 //***************************************************************************************
-unsigned long WriteRegData(unsigned long AdmNum, unsigned long TetrNum, unsigned long RegNum, unsigned long& RegVal)
+unsigned int WriteRegData(unsigned int AdmNum, unsigned int TetrNum, unsigned int RegNum, unsigned int& RegVal)
 {
 	int ret = 0;
 
@@ -179,7 +179,7 @@ unsigned long WriteRegData(unsigned long AdmNum, unsigned long TetrNum, unsigned
 }
 
 //***************************************************************************************
-unsigned long WriteRegDataDir(unsigned long AdmNum, unsigned long TetrNum, unsigned long RegNum, unsigned long& RegVal)
+unsigned int WriteRegDataDir(unsigned int AdmNum, unsigned int TetrNum, unsigned int RegNum, unsigned int& RegVal)
 {
 	int ret = 0;
 
@@ -197,7 +197,7 @@ unsigned long WriteRegDataDir(unsigned long AdmNum, unsigned long TetrNum, unsig
 }
 
 //***************************************************************************************
-unsigned long ReadRegData(unsigned long AdmNum, unsigned long TetrNum, unsigned long RegNum, unsigned long& RegVal)
+unsigned int ReadRegData(unsigned int AdmNum, unsigned int TetrNum, unsigned int RegNum, unsigned int& RegVal)
 {
 	int ret = 0;
 
@@ -217,7 +217,7 @@ unsigned long ReadRegData(unsigned long AdmNum, unsigned long TetrNum, unsigned 
 }
 
 //***************************************************************************************
-unsigned long ReadRegDataDir(unsigned long AdmNum, unsigned long TetrNum, unsigned long RegNum, unsigned long& RegVal)
+unsigned int ReadRegDataDir(unsigned int AdmNum, unsigned int TetrNum, unsigned int RegNum, unsigned int& RegVal)
 {
 	int ret = 0;
 
@@ -237,7 +237,7 @@ unsigned long ReadRegDataDir(unsigned long AdmNum, unsigned long TetrNum, unsign
 }
 
 //***************************************************************************************
-unsigned long ResetDmaFifo(int DmaChan)
+unsigned int ResetDmaFifo(int DmaChan)
 {
 	int ret = 0;
 
@@ -255,16 +255,16 @@ unsigned long ResetDmaFifo(int DmaChan)
 	return ret;
 }
 
-//unsigned long PhysAddrStub = NULL;
+//unsigned int PhysAddrStub = NULL;
 
 //***************************************************************************************
-unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blkNum, unsigned long isSysMem, unsigned long dir, unsigned long addr, int DmaChan)
+unsigned int AllocMemory(void** pBuf, unsigned int blkSize, unsigned int& blkNum, unsigned int isSysMem, unsigned int dir, unsigned int addr, int DmaChan)
 {
 #ifdef _WIN32
-	g_OvlStartStream[DmaChan].hEvent = CreateEvent(NULL, TRUE, TRUE, NULL); // начальное состояние Signaled
+	g_OvlStartStream[DmaChan].hEvent = CreateEvent(NULL, TRUE, TRUE, NULL); // РЅР°С‡Р°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ Signaled
 	char nameEvent[MAX_PATH];
 	sprintf(nameEvent, "event_DmaChan_%d", DmaChan);
-	g_hBlockEndEvent[DmaChan] = CreateEvent(NULL, TRUE, TRUE, nameEvent); // начальное состояние Signaled
+	g_hBlockEndEvent[DmaChan] = CreateEvent(NULL, TRUE, TRUE, nameEvent); // РЅР°С‡Р°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ Signaled
 #endif
 
     g_DescripSize[DmaChan] = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(void*);
@@ -283,7 +283,7 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 	g_pMemDescrip[DmaChan]->hTransEndEvent = g_OvlStartStream[DmaChan].hEvent;
 #endif
 	g_pMemDescrip[DmaChan]->pStub = NULL;
-    for (unsigned long iBlk = 0; iBlk < blkNum; iBlk++)
+    for (unsigned int iBlk = 0; iBlk < blkNum; iBlk++)
 	{
 		if (isSysMem)
 			g_pMemDescrip[DmaChan]->pBlock[iBlk] = NULL;
@@ -293,7 +293,7 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 			//g_pMemDescrip[DmaChan]->pBlock[iBlk] = VirtualAlloc(NULL, blkSize, MEM_COMMIT, PAGE_READWRITE);
 	}
 
-    //unsigned long   length;
+    //unsigned int   length;
 
 	//if (!DeviceIoControl(
 	//		g_hWDM,
@@ -316,11 +316,29 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 		g_pMemDescrip[DmaChan],
 		g_DescripSize[DmaChan]);
 
+#if defined(__linux__)
+    // РЅСѓР¶РЅРѕ С‚РѕР»СЊРєРѕ РґР»СЏ linux (РїРѕРґ windows СЌС‚Рѕ С„СѓРЅРєС†РёРё-Р·Р°РіР»СѓС€РєРё)
+    if(g_pMemDescrip[DmaChan]->MemType == 1	||	// РґР»СЏ СЃРёСЃС‚РµРјРЅРѕР№ РїР°РјСЏС‚Рё
+            g_pMemDescrip[DmaChan]->MemType == 8)	// РґР»СЏ С„РёР·РёС‡РµСЃРєРёС… Р°РґСЂРµСЃРѕРІ
+    {
+        for(unsigned iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++)
+        {
+            if(IPC_mapPhysAddr(g_hWDM, &g_pMemDescrip[DmaChan]->pBlock[iBlk], (size_t)g_pMemDescrip[DmaChan]->pBlock[iBlk], g_pMemDescrip[DmaChan]->BlockSize))
+                return -1;
+        }
+    }
+    if(g_pMemDescrip[DmaChan]->pStub)
+    {
+        if(IPC_mapPhysAddr(g_hWDM, &g_pMemDescrip[DmaChan]->pStub, (size_t)g_pMemDescrip[DmaChan]->pStub, sizeof(BRDstrm_Stub)))
+            return -2;
+    }
+#endif
+
 	blkNum = g_pMemDescrip[DmaChan]->BlockCnt;
     g_DescripSize[DmaChan] = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(void*);
 	*pBuf = &(g_pMemDescrip[DmaChan]->pBlock[0]);
 
-//	unsigned long* psgtable = (unsigned long*)(g_pMemDescrip[DmaChan]->pBlock[0]);
+//	unsigned int* psgtable = (unsigned int*)(g_pMemDescrip[DmaChan]->pBlock[0]);
 //	PhysAddrStub = psgtable[3];
 
 	return ret;
@@ -328,9 +346,21 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 }
 
 //***************************************************************************************
-unsigned long FreeMemory(int DmaChan)
+unsigned int FreeMemory(int DmaChan)
 {
 	int ret = 0;
+
+#if defined(__linux__)
+    if(g_pMemDescrip[DmaChan]->MemType == 1	||	// РґР»СЏ СЃРёСЃС‚РµРјРЅРѕР№ РїР°РјСЏС‚Рё
+        g_pMemDescrip[DmaChan]->MemType == 8) {	// РґР»СЏ С„РёР·РёС‡РµСЃРєРёС… Р°РґСЂРµСЃРѕРІ
+        for(unsigned int iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++) {
+            IPC_unmapPhysAddr(g_hWDM, g_pMemDescrip[DmaChan]->pBlock[iBlk], g_pMemDescrip[DmaChan]->BlockSize);
+        }
+    }
+    if(g_pMemDescrip[DmaChan]->pStub) {
+        IPC_unmapPhysAddr(g_hWDM, g_pMemDescrip[DmaChan]->pStub, sizeof(BRDstrm_Stub));
+    }
+#endif
 
 	ret = IPC_ioctlDevice(
 		g_hWDM,
@@ -342,7 +372,7 @@ unsigned long FreeMemory(int DmaChan)
 
 	if (g_pMemDescrip[DmaChan]->MemType == 0)
 	{
-        for (unsigned long iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++)
+        for (unsigned int iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++)
 			//			delete g_pMemDescrip[DmaChan]->pBlock[iBlk];
 			IPC_virtFree(g_pMemDescrip[DmaChan]->pBlock[iBlk]);
 			//VirtualFree(g_pMemDescrip[DmaChan]->pBlock[iBlk], 0, MEM_RELEASE);
@@ -360,14 +390,14 @@ unsigned long FreeMemory(int DmaChan)
 }
 
 //***************************************************************************************
-unsigned long StartDma(int IsCycling, int DmaChan)
+unsigned int StartDma(int IsCycling, int DmaChan)
 {
 	int ret = 0;
 	if (g_pMemDescrip[DmaChan])
 	{
 #ifdef _WIN32
-		ResetEvent(g_OvlStartStream[DmaChan].hEvent); // сброс в состояние Non-Signaled перед стартом
-		ResetEvent(g_hBlockEndEvent[DmaChan]); // сброс в состояние Non-Signaled перед стартом
+		ResetEvent(g_OvlStartStream[DmaChan].hEvent); // СЃР±СЂРѕСЃ РІ СЃРѕСЃС‚РѕСЏРЅРёРµ Non-Signaled РїРµСЂРµРґ СЃС‚Р°СЂС‚РѕРј
+		ResetEvent(g_hBlockEndEvent[DmaChan]); // СЃР±СЂРѕСЃ РІ СЃРѕСЃС‚РѕСЏРЅРёРµ Non-Signaled РїРµСЂРµРґ СЃС‚Р°СЂС‚РѕРј
 #endif
 		AMB_START_DMA_CHANNEL StartDescrip;
 		StartDescrip.DmaChanNum = DmaChan;
@@ -410,7 +440,7 @@ unsigned long StartDma(int IsCycling, int DmaChan)
 		}
 		return ret;
 
-//		unsigned long   length;
+//		unsigned int   length;
 //
 //		if (!DeviceIoControl(
 //			g_hWDM,
@@ -433,7 +463,7 @@ unsigned long StartDma(int IsCycling, int DmaChan)
 }
 
 //***************************************************************************************
-unsigned long StopDma(int DmaChan)
+unsigned int StopDma(int DmaChan)
 {
 	int ret = 0;
 	if (g_pMemDescrip[DmaChan])
@@ -443,7 +473,7 @@ unsigned long StopDma(int DmaChan)
 		{
 			AMB_STATE_DMA_CHANNEL StateDescrip;
 			StateDescrip.DmaChanNum = DmaChan;
-			StateDescrip.Timeout = 0;//pState->timeout; останавливает немедленно (в 0-кольце оставлю пока возможность ожидания)
+			StateDescrip.Timeout = 0;//pState->timeout; РѕСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РЅРµРјРµРґР»РµРЅРЅРѕ (РІ 0-РєРѕР»СЊС†Рµ РѕСЃС‚Р°РІР»СЋ РїРѕРєР° РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РѕР¶РёРґР°РЅРёСЏ)
 
 			ret = IPC_ioctlDevice(
 				g_hWDM,
@@ -461,7 +491,7 @@ unsigned long StopDma(int DmaChan)
 }
 
 //***************************************************************************************
-unsigned long StateDma(unsigned long msTimeout, int DmaChan, int& state, unsigned long& blkNum)
+unsigned int StateDma(unsigned int msTimeout, int DmaChan, int& state, unsigned int& blkNum)
 {
 	int ret = 0;
 
@@ -484,7 +514,7 @@ unsigned long StateDma(unsigned long msTimeout, int DmaChan, int& state, unsigne
 }
 
 //***************************************************************************************
-unsigned long WaitBuffer(unsigned long msTimeout, int DmaChan)
+unsigned int WaitBuffer(unsigned int msTimeout, int DmaChan)
 {
 	if (g_pMemDescrip[DmaChan])
 	{
@@ -508,7 +538,7 @@ unsigned long WaitBuffer(unsigned long msTimeout, int DmaChan)
 		if (Status == WAIT_TIMEOUT)
 			return TIMEOUT_ERROR;
 		else
-			ResetEvent(g_OvlStartStream[DmaChan].hEvent); // сброс в состояние Non-Signaled после завершения блока
+			ResetEvent(g_OvlStartStream[DmaChan].hEvent); // СЃР±СЂРѕСЃ РІ СЃРѕСЃС‚РѕСЏРЅРёРµ Non-Signaled РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р±Р»РѕРєР°
 #endif
 		return 0;
 	}
@@ -516,7 +546,7 @@ unsigned long WaitBuffer(unsigned long msTimeout, int DmaChan)
 }
 
 //***************************************************************************************
-unsigned long WaitBlock(unsigned long msTimeout, int DmaChan)
+unsigned int WaitBlock(unsigned int msTimeout, int DmaChan)
 {
 	if (g_pMemDescrip[DmaChan])
 	{
@@ -540,7 +570,7 @@ unsigned long WaitBlock(unsigned long msTimeout, int DmaChan)
 		if (Status == WAIT_TIMEOUT)
 			return TIMEOUT_ERROR;
 		else
-			ResetEvent(g_hBlockEndEvent); // сброс в состояние Non-Signaled после завершения блока
+			ResetEvent(g_hBlockEndEvent); // СЃР±СЂРѕСЃ РІ СЃРѕСЃС‚РѕСЏРЅРёРµ Non-Signaled РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р±Р»РѕРєР°
 #endif
 		return 0;
 	}
