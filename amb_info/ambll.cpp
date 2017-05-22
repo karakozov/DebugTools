@@ -23,10 +23,10 @@ enum
 
 typedef struct
 {
-	LONG	lastBlock;				// Number of Block which was filled last Time
-	ULONG	totalCounter;			// Total Counter of all filled Block
-	ULONG	offset;					// First Unfilled Byte
-	ULONG	state;					// CBUF local state
+    long	lastBlock;				// Number of Block which was filled last Time
+    unsigned long	totalCounter;			// Total Counter of all filled Block
+    unsigned long	offset;					// First Unfilled Byte
+    unsigned long	state;					// CBUF local state
 } BRDstrm_Stub, *PBRDstrm_Stub, BRDctrl_StreamStub, *PBRDctrl_StreamStub;
 
 typedef enum _AMB_Errors {
@@ -45,7 +45,7 @@ typedef enum _AMB_Errors {
 } AMB_Errors;
 
 #ifdef __linux__
-ULONG GetLastError(void)
+unsigned long GetLastError(void)
 {
 	//printf("GetLastError(): %s\n", strerror(IPC_sysError()));
 	//return -1;
@@ -83,7 +83,7 @@ void dev_close()
 unsigned long GetVersion(char* pVerInfo)
 {
 	int ret = 0;
-	//	ULONG   length;
+    //	unsigned long   length;
 	//char Buf[MAX_STRING_LEN];
 
 	ret = IPC_ioctlDevice(
@@ -122,11 +122,11 @@ unsigned long GetLocation(unsigned long& SlotNumber, unsigned long& BusNumber, u
 unsigned long GetDeviceID(unsigned short& DeviceID)
 {
 	int ret = 0;
-	//	ULONG   length;     // the return length from the driver
+    //	unsigned long   length;     // the return length from the driver
 	AMB_DATA_BUF PciConfigPtr =
 	{ NULL, sizeof(short), 2 };
 
-	//ULONG sss = sizeof(AMB_DATA_BUF);
+    //unsigned long sss = sizeof(AMB_DATA_BUF);
 
 	ret = IPC_ioctlDevice(
 		g_hWDM,
@@ -255,7 +255,7 @@ unsigned long ResetDmaFifo(int DmaChan)
 	return ret;
 }
 
-//ULONG PhysAddrStub = NULL;
+//unsigned long PhysAddrStub = NULL;
 
 //***************************************************************************************
 unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blkNum, unsigned long isSysMem, unsigned long dir, unsigned long addr, int DmaChan)
@@ -267,8 +267,8 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 	g_hBlockEndEvent[DmaChan] = CreateEvent(NULL, TRUE, TRUE, nameEvent); // начальное состояние Signaled
 #endif
 
-	g_DescripSize[DmaChan] = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(PVOID);
-	g_pMemDescrip[DmaChan] = (PAMB_MEM_DMA_CHANNEL)new UCHAR[g_DescripSize[DmaChan]];
+    g_DescripSize[DmaChan] = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(void*);
+    g_pMemDescrip[DmaChan] = (PAMB_MEM_DMA_CHANNEL)new unsigned char[g_DescripSize[DmaChan]];
 
 	g_pMemDescrip[DmaChan]->DmaChanNum = DmaChan;
 	g_pMemDescrip[DmaChan]->Direction = dir;
@@ -283,7 +283,7 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 	g_pMemDescrip[DmaChan]->hTransEndEvent = g_OvlStartStream[DmaChan].hEvent;
 #endif
 	g_pMemDescrip[DmaChan]->pStub = NULL;
-	for (ULONG iBlk = 0; iBlk < blkNum; iBlk++)
+    for (unsigned long iBlk = 0; iBlk < blkNum; iBlk++)
 	{
 		if (isSysMem)
 			g_pMemDescrip[DmaChan]->pBlock[iBlk] = NULL;
@@ -293,7 +293,7 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 			//g_pMemDescrip[DmaChan]->pBlock[iBlk] = VirtualAlloc(NULL, blkSize, MEM_COMMIT, PAGE_READWRITE);
 	}
 
-	//ULONG   length;
+    //unsigned long   length;
 
 	//if (!DeviceIoControl(
 	//		g_hWDM,
@@ -317,10 +317,10 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 		g_DescripSize[DmaChan]);
 
 	blkNum = g_pMemDescrip[DmaChan]->BlockCnt;
-	g_DescripSize[DmaChan] = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(PVOID);
+    g_DescripSize[DmaChan] = sizeof(AMB_MEM_DMA_CHANNEL) + (blkNum - 1) * sizeof(void*);
 	*pBuf = &(g_pMemDescrip[DmaChan]->pBlock[0]);
 
-//	ULONG* psgtable = (ULONG*)(g_pMemDescrip[DmaChan]->pBlock[0]);
+//	unsigned long* psgtable = (unsigned long*)(g_pMemDescrip[DmaChan]->pBlock[0]);
 //	PhysAddrStub = psgtable[3];
 
 	return ret;
@@ -342,7 +342,7 @@ unsigned long FreeMemory(int DmaChan)
 
 	if (g_pMemDescrip[DmaChan]->MemType == 0)
 	{
-		for (ULONG iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++)
+        for (unsigned long iBlk = 0; iBlk < g_pMemDescrip[DmaChan]->BlockCnt; iBlk++)
 			//			delete g_pMemDescrip[DmaChan]->pBlock[iBlk];
 			IPC_virtFree(g_pMemDescrip[DmaChan]->pBlock[iBlk]);
 			//VirtualFree(g_pMemDescrip[DmaChan]->pBlock[iBlk], 0, MEM_RELEASE);
@@ -410,7 +410,7 @@ unsigned long StartDma(int IsCycling, int DmaChan)
 		}
 		return ret;
 
-//		ULONG   length;
+//		unsigned long   length;
 //
 //		if (!DeviceIoControl(
 //			g_hWDM,
@@ -461,7 +461,7 @@ unsigned long StopDma(int DmaChan)
 }
 
 //***************************************************************************************
-unsigned long StateDma(unsigned long msTimeout, int DmaChan, int& state, ULONG& blkNum)
+unsigned long StateDma(unsigned long msTimeout, int DmaChan, int& state, unsigned long& blkNum)
 {
 	int ret = 0;
 
