@@ -47,7 +47,7 @@ unsigned long AllocMemory(void** pBuf, unsigned long blkSize, unsigned long& blk
 unsigned long FreeMemory(int DmaChan);
 unsigned long StartDma(int IsCycling, int DmaChan);
 unsigned long StopDma(int DmaChan);
-unsigned long StateDma(unsigned long msTimeout, int DmaChan, int& state, ULONG& blkNum);
+unsigned long StateDma(unsigned long msTimeout, int DmaChan, int& state, unsigned long& blkNum);
 unsigned long WaitBuffer(unsigned long msTimeout, int DmaChan);
 unsigned long WaitBlock(unsigned long msTimeout, int DmaChan);
 
@@ -55,20 +55,20 @@ unsigned long WaitBlock(unsigned long msTimeout, int DmaChan);
 int g_dev;
 
 typedef struct _PLD_INFO {
-	ULONG version;
-	ULONG modification;
-	ULONG build;
-	ULONG submif;
+    unsigned long version;
+    unsigned long modification;
+    unsigned long build;
+    unsigned long submif;
 }PLD_INFO, *PPLD_INFO;
 
 typedef struct _TRD_INFO {
-	ULONG id;
-	ULONG ver;
-	ULONG mod;
-	ULONG tres;
-	ULONG fsize;
-	ULONG ftype;
-	ULONG status;
+    unsigned long id;
+    unsigned long ver;
+    unsigned long mod;
+    unsigned long tres;
+    unsigned long fsize;
+    unsigned long ftype;
+    unsigned long status;
 }TRD_INFO, *PTRD_INFO;
 
 // Numbers of Tetrad Registers
@@ -131,8 +131,8 @@ typedef enum _AMB_Errors {
 //***************************************************************************************
 unsigned long AdmPldWorkAndCheck(PLD_INFO* pPldInfo)
 {
-	ULONG status = 0;
-	ULONG value = 1; // переключить ПЛИС в рабочий режим
+    unsigned long status = 0;
+    unsigned long value = 1; // переключить ПЛИС в рабочий режим
 	status = WriteRegDataDir(0, 0, ADM2IFnr_DATA, value);
 	status = WriteRegDataDir(0, 0, ADM2IFnr_DATA, value);
 
@@ -177,14 +177,14 @@ unsigned long AdmPldWorkAndCheck(PLD_INFO* pPldInfo)
 //***************************************************************************************
 void TetradList(PTRD_INFO info)
 {
-	ULONG status = 0;
+    unsigned long status = 0;
 
-	//	ULONG value = 1; // переключить ПЛИС в рабочий режим
+    //	unsigned long value = 1; // переключить ПЛИС в рабочий режим
 	//	status = WriteRegDataDir(0, 0, ADM2IFnr_DATA, value);
 
-	//	ULONG valueID = 0;
-	//	ULONG valueIDMOD = 0;
-	//	ULONG valueVER = 0;
+    //	unsigned long valueID = 0;
+    //	unsigned long valueIDMOD = 0;
+    //	unsigned long valueVER = 0;
 	int iTetr = 0;
 	for (iTetr = 0; iTetr < MAX_TETRNUM; iTetr++)
 	{
@@ -202,14 +202,14 @@ void TetradList(PTRD_INFO info)
 // tetrNum : номер тетрады 0 - MAIN, 6 - DIO_IN
 // width : 0 - 64-битная шина данных, 1 - 128-битная шина данных
 //***************************************************************************************
-ULONG DmaChannelTest(int tetrNum, int width)
+unsigned long DmaChannelTest(int tetrNum, int width)
 {
-	ULONG status = 0;
+    unsigned long status = 0;
 	int dmaChan = 0; // номер канала DMA
 	int fl_err = 0;
 
 	int chan_state;
-	ULONG blockNum;
+    unsigned long blockNum;
 	status = StateDma(0, dmaChan, chan_state, blockNum);
 	if (status)
 	{
@@ -238,7 +238,7 @@ ULONG DmaChannelTest(int tetrNum, int width)
 	//	HANDLE hThisThread = GetCurrentThread();
 	//	SetThreadAffinityMask(hThisThread, 0x1);
 
-	ULONG regVal = 1;
+    unsigned long regVal = 1;
 	if (tetrNum == 6) // DIO_IN
 	{
 		status = WriteRegData(0, 1, 0x0f, regVal); // TEST_CTLR:MUX = 1 - подключить узел формирования тестовой последовательности
@@ -264,16 +264,16 @@ ULONG DmaChannelTest(int tetrNum, int width)
 	//status = ReadLocalBusReg(fifo_stat.AsWhole, PEFIFOadr_FIFO_STATUS+4*0x100, 2);
 	//printf("FIFO Status = 0x%04X\n", fifo_stat.AsWhole);
 
-	ULONG dir = BRDstrm_DIR_IN; // ввод // BRDstrm_DIR_OUT; // вывод
-								//	ULONG blkSize = 4096*16;// * 1024; // размер каждого блока
-								//	ULONG blkSize = 1024 * 1024 * 8; // размер каждого блока
-								//ULONG blkSize = 65536;
-								//ULONG blkSize = 1024 * 1024;
-	ULONG blkSize = 4096 * 1024;
-	ULONG blkNum = 1; // число блоков
-	ULONG isSysMem = 1; // системная память = 1, пользовательская память = 0
-	ULONG addr = tetrNum; // тетрада 0 (младшие 16 бит), ADM-интерфес 0 (старшие 16 бит)
-	PVOID pBuf = NULL; // указатель на массив указателей на блоки (возвращается функцией AllocMemory)
+    unsigned long dir = BRDstrm_DIR_IN; // ввод // BRDstrm_DIR_OUT; // вывод
+                                //	unsigned long blkSize = 4096*16;// * 1024; // размер каждого блока
+                                //	unsigned long blkSize = 1024 * 1024 * 8; // размер каждого блока
+                                //unsigned long blkSize = 65536;
+                                //unsigned long blkSize = 1024 * 1024;
+    unsigned long blkSize = 4096 * 1024;
+    unsigned long blkNum = 1; // число блоков
+    unsigned long isSysMem = 1; // системная память = 1, пользовательская память = 0
+    unsigned long addr = tetrNum; // тетрада 0 (младшие 16 бит), ADM-интерфес 0 (старшие 16 бит)
+    void* pBuf = NULL; // указатель на массив указателей на блоки (возвращается функцией AllocMemory)
 
 	printf("Allocating Memory...!!!\r");
 	for (int i = 0; i < 4; i++)
@@ -291,19 +291,19 @@ ULONG DmaChannelTest(int tetrNum, int width)
 	else
 	{
 		printf("Memory is Allocated!!!  (%d block, Block size = %d kBytes)\n", blkNum, blkSize / 1024);
-		PULONG* pBufferZ = (PULONG*)pBuf;
+        unsigned long* pBufferZ = (unsigned long*)pBuf;
 
 		//		if(extdma_sup)
 		//			SetIrqMode(1, dmaChan);
 
 		// заполняю выделенные буфера нулями
 		//printf("Zeroing Memory...!!!\r"));
-		for (ULONG iBlock = 0; iBlock < blkNum; iBlock++)
-		{
-			//for(ULONG i = 0; i < blkSize/4; i++)
-			for (ULONG i = 0; i < 32; i++)
-				pBufferZ[iBlock][i] = i;
-		}
+        //for (unsigned long iBlock = 0; iBlock < blkNum; iBlock++)
+        //{
+            //for(unsigned long i = 0; i < blkSize/4; i++)
+            //for (unsigned long i = 0; i < 32; i++)
+            //	pBufferZ[iBlock][i] = i;
+        //}
 
 		if (tetrNum == 6) // DIO_IN
 		{
@@ -365,13 +365,13 @@ ULONG DmaChannelTest(int tetrNum, int width)
 		if (!fl_err)
 		{
 			// контроль тестовой последовательности
-			__int64 cnt_err = 0;
-			__int64** pBuffer = (__int64**)pBuf;
-			__int64 data_rd;
+            long long cnt_err = 0;
+            long long** pBuffer = (long long**)pBuf;
+            long long data_rd;
 			if (tetrNum == 6) // DIO_IN
 			{
-				__int64 data_wr = 0x00000000A5A50123;
-				for (ULONG iBlock = 0; iBlock < blkNum; iBlock++)
+                long long data_wr = 0x00000000A5A50123;
+                for (unsigned long iBlock = 0; iBlock < blkNum; iBlock++)
 				{
 					data_rd = pBuffer[iBlock][0];
 					if (data_wr != data_rd)
@@ -380,16 +380,16 @@ ULONG DmaChannelTest(int tetrNum, int width)
 						if (cnt_err < 10)
 							printf("Error (%d): wr %016I64X : rd %016I64X\n", iBlock, data_wr, data_rd);
 					}
-					data_wr = ((__int64)iBlock + 1) << 40 | 0xA5A50123;
+                    data_wr = ((long long)iBlock + 1) << 40 | 0xA5A50123;
 				}
 			}
 			else
 			{
-				__int64 data_wr = 2;
-				__int64 data_wrh = 0xAA55;
-				for (ULONG iBlock = 0; iBlock < blkNum; iBlock++)
+                long long data_wr = 2;
+                long long data_wrh = 0xAA55;
+                for (unsigned long iBlock = 0; iBlock < blkNum; iBlock++)
 				{
-					for (ULONG i = 0; i < blkSize / 8; i++)
+                    for (unsigned long i = 0; i < blkSize / 8; i++)
 					{
 						data_rd = pBuffer[iBlock][i];
 						if (data_wr != data_rd)
@@ -399,12 +399,12 @@ ULONG DmaChannelTest(int tetrNum, int width)
 								printf("Error (%d, %d): wr %016I64X: rd %016I64X\n", i, iBlock, data_wr, data_rd);
 							data_wr = data_rd;
 						}
-						ULONG data_h = ULONG(data_wr >> 32);
-						ULONG f63 = data_h >> 31;
-						ULONG f62 = data_h >> 30;
-						ULONG f60 = data_h >> 28;
-						ULONG f59 = data_h >> 27;
-						ULONG f0 = (f63 ^ f62 ^ f60 ^ f59) & 1;
+                        unsigned long data_h = (unsigned long)(data_wr >> 32);
+                        unsigned long f63 = data_h >> 31;
+                        unsigned long f62 = data_h >> 30;
+                        unsigned long f60 = data_h >> 28;
+                        unsigned long f59 = data_h >> 27;
+                        unsigned long f0 = (f63 ^ f62 ^ f60 ^ f59) & 1;
 
 						data_wr <<= 1;
 						data_wr &= ~1;
@@ -420,12 +420,12 @@ ULONG DmaChannelTest(int tetrNum, int width)
 									printf("Error (%d, %d): wr %016I64X: rd %016I64X\n", i, iBlock, data_wr, data_rd);
 								data_wrh = data_rd;
 							}
-							ULONG data_h = ULONG(data_wrh >> 32);
-							ULONG f63 = data_h >> 31;
-							ULONG f62 = data_h >> 30;
-							ULONG f60 = data_h >> 28;
-							ULONG f59 = data_h >> 27;
-							ULONG f0 = (f63 ^ f62 ^ f60 ^ f59) & 1;
+                            unsigned long data_h = (unsigned long)(data_wrh >> 32);
+                            unsigned long f63 = data_h >> 31;
+                            unsigned long f62 = data_h >> 30;
+                            unsigned long f60 = data_h >> 28;
+                            unsigned long f59 = data_h >> 27;
+                            unsigned long f0 = (f63 ^ f62 ^ f60 ^ f59) & 1;
 
 							data_wrh <<= 1;
 							data_wrh &= ~1;
@@ -450,9 +450,9 @@ ULONG DmaChannelTest(int tetrNum, int width)
 unsigned long MainTest()
 {
 	printf("\n");
-	ULONG valueVER = 0;
-	ULONG status = ReadRegData(0, 0, ADM2IFnr_VER, valueVER);
-	ULONG valueMOD = 0;
+    unsigned long valueVER = 0;
+    unsigned long status = ReadRegData(0, 0, ADM2IFnr_VER, valueVER);
+    unsigned long valueMOD = 0;
 	status = ReadRegData(0, 0, ADM2IFnr_IDMOD, valueMOD);
 	if ((valueMOD == 8 && valueVER >= 0x104) || (valueMOD == 17))
 	{
@@ -531,7 +531,7 @@ int main(int argc, char *argv[])
 	status = GetLocation(SlotNumber, BusNumber, DeviceNumber);
 	printf("Board location: slot %ld, bus %ld, device %ld\n", SlotNumber, BusNumber, DeviceNumber);
 
-	ULONG PldStatus;
+    unsigned long PldStatus;
 	GetPldStatus(PldStatus, 0);
 
 	if (PldStatus)
