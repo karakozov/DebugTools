@@ -496,9 +496,9 @@ int main(int argc, char *argv[])
 	fflush(stdout);
 	setbuf(stdout, NULL);
 
-    printf("sizeof(unsigned int) = %d\n", sizeof(unsigned int));
-    printf("sizeof(unsigned int) = %d\n", sizeof(unsigned int));
-    printf("sizeof(long long) = %d\n", sizeof(long long));
+    //printf("sizeof(unsigned int) = %d\n", sizeof(unsigned int));
+    //printf("sizeof(unsigned int) = %d\n", sizeof(unsigned int));
+    //printf("sizeof(long long) = %d\n", sizeof(long long));
 
 	g_dev = 0;
 	//if (lstrlen(lpCmdLine))
