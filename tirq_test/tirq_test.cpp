@@ -72,6 +72,8 @@ void tetr_info(BRD_Handle hReg);
 void sdram_irq(BRD_Handle hReg);
 // прерывания от бита START тетрады MAIN
 void main_irq(BRD_Handle hReg);
+// прерывания от бита 11 тетрады 1
+void trd1_bit11_irq(BRD_Handle hReg);
 
 // отобразить информацию об устройстве
 void DisplayDeviceInfo(PDEV_INFO pDevInfo)
@@ -163,7 +165,10 @@ int BRDC_main( int argc, BRDCHAR *argv[] )
 	//sdram_irq(hReg);
 		
 	// прерывания от бита START тетрады MAIN
-	main_irq(hReg);
+	//main_irq(hReg);
+
+	// прерывания от бита 11 тетрады 1
+	trd1_bit11_irq(hReg);
 
 	//====================================================================================
 	// закрыть службу
@@ -412,6 +417,7 @@ void tetr_info(BRD_Handle hReg)
 // необходимо предварительно запустить программу, которая бы выполнила подготовку АЦП и памяти к сбору данных
 void sdram_irq(BRD_Handle hReg)
 {
+	BRDC_printf(_BRDC("SDRAM_IRQ TEST\n"));
 	S32		status;
 	BRD_Reg regdata;
 
@@ -495,6 +501,7 @@ void sdram_irq(BRD_Handle hReg)
 // прерывания от бита START тетрады MAIN
 void main_irq(BRD_Handle hReg)
 {
+	BRDC_printf(_BRDC("MAIN_START_IRQ TEST\n"));
 	S32		status;
 	BRD_Reg regdata;
 	regdata.tetr = 0; // MAIN tetrada
@@ -564,6 +571,66 @@ void main_irq(BRD_Handle hReg)
 		status = BRD_ctrl(hReg, 0, BRDctrl_REG_READIND, &regdata);
 		regdata.val &= 0xffdf; // start off
 		status = BRD_ctrl(hReg, 0, BRDctrl_REG_WRITEIND, &regdata);
+
+	}
+	BRDC_printf(_BRDC("\n"));
+
+	status = BRD_ctrl(hReg, 0, BRDctrl_REG_CLEARSTATIRQ, &irqdata.tetr);
+
+#ifdef _WIN32
+	CloseHandle(hEvent);
+#endif
+}
+
+// прерывания от бита 11 тетрады 1 в специально созданной для этого теста прошивке
+void trd1_bit11_irq(BRD_Handle hReg)
+{
+	BRDC_printf(_BRDC("TRD1_BIT11_IRQ TEST\n"));
+	S32		status;
+	BRD_Reg regdata;
+	regdata.tetr = 1; // tetrada1
+	regdata.reg = 0; // MODE0
+	regdata.val = 0x11; // MASTER
+	status = BRD_ctrl(hReg, 0, BRDctrl_REG_WRITEIND, &regdata);
+	regdata.val = 0x10; // MASTER
+	status = BRD_ctrl(hReg, 0, BRDctrl_REG_WRITEIND, &regdata);
+
+	BRD_Irq irqdata;
+	irqdata.tetr = 1;
+	irqdata.irqMask = 0x800; // bit 11 - START
+	irqdata.irqInv = 0;
+	irqdata.hEvent = NULL;
+#ifdef _WIN32
+	HANDLE hEvent = CreateEvent(NULL, TRUE, TRUE, _BRDC("irqevent_t1_b11")); // начальное состояние Signaled
+	irqdata.hEvent = hEvent;
+#endif
+	status = BRD_ctrl(hReg, 0, BRDctrl_REG_SETSTATIRQ, &irqdata);
+
+	int num = 200;
+	for (int i = 0; i<num; i++)
+	{
+		// Enable IRQ 
+		regdata.reg = 0; // MODE0
+		status = BRD_ctrl(hReg, 0, BRDctrl_REG_READIND, &regdata);
+		regdata.val |= 4; // IRQ_EN
+		status = BRD_ctrl(hReg, 0, BRDctrl_REG_WRITEIND, &regdata);
+
+#ifdef _WIN32
+		ResetEvent(hEvent); // сброс в состояние Non-Signaled
+#endif
+
+		irqdata.irqInv = 5000; // timeout
+		status = BRD_ctrl(hReg, 0, BRDctrl_REG_WAITSTATIRQ, &irqdata);
+		if (BRD_errcmp(status, BRDerr_OK))
+			BRDC_printf(_BRDC("\rInterrupt %d is OK"), i);
+		else
+		{
+			if (BRD_errcmp(status, BRDerr_WAIT_TIMEOUT))
+				BRDC_printf(_BRDC("\nTimeout by waiting of interrupt\n"));
+			else
+				BRDC_printf(_BRDC("\nError by waiting of interrupt\n"));
+			break;
+		}
 
 	}
 	BRDC_printf(_BRDC("\n"));
