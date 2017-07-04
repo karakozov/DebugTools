@@ -2,7 +2,7 @@
 PHONY = clean
 TARGET_NAME = amb_info
 
-include $(BARDYDIR)/make/macros.mk
+include $(GIPCYDIR)/make/macros.mk
 
 DIRS := $(GIPCYINC)
 #DIRS += $(BARDYDIR)/BRDINC
@@ -20,6 +20,6 @@ OBJ_FILES := $(SOURCE:.cpp=.o)
 
 all: $(TARGET_NAME)
 
-include $(BARDYDIR)/make/rules.mk
-include $(BARDYDIR)/make/clean.mk
-include $(BARDYDIR)/make/app.mk
+include $(GIPCYDIR)/make/rules.mk
+include $(GIPCYDIR)/make/clean.mk
+include $(GIPCYDIR)/make/app.mk
