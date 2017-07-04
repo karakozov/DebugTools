@@ -23,6 +23,8 @@
 //#include <malloc.h>
 //#include <memory.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 //#include <math.h>
 //#include <tchar.h>
 //
@@ -138,9 +140,9 @@ typedef enum _AMB_Errors {
 
 // PCI Express Capability List Register & Capabilities Register (0x00)
 typedef union _PEX_CAPREG {
-	ULONG AsWhole; // Register as a Whole Word
+	unsigned int AsWhole; // Register as a Whole Word
 	struct { // Register as Bit Pattern
-		ULONG	CapId : 8, // Capability ID
+		unsigned int	CapId : 8, // Capability ID
 			NextCapPointer : 8, // Next Capability Pointer
 			CapVer : 4, // Capability version
 			DevType : 4, // Device/Port type
@@ -152,9 +154,9 @@ typedef union _PEX_CAPREG {
 
 // Link Control Register & Link Status Register (0x10)
 typedef union _PEX_LINKREG {
-	ULONG AsWhole; // Register as a Whole Word
+	unsigned int AsWhole; // Register as a Whole Word
 	struct { // Register as Bit Pattern
-		ULONG	ASPM : 2, // Active State Power Management
+		unsigned int	ASPM : 2, // Active State Power Management
 			Res : 1, // Reserved
 			RCB : 1, // Root Completion Boundary
 			LinkDis : 1, // Link Disable
@@ -221,13 +223,13 @@ typedef enum _PE_FIFO_ADDR_REG {
 } PE_FIFO_ADDR_REG;
 
 typedef struct _PCIEC_INFO {
-	ULONG pldver;
-	ULONG dmaver;
-	ULONG coreid;
-	ULONG coremod;
-	ULONG errcrc;
-	ULONG errcto;
-	ULONG irqmin;
+	unsigned int pldver;
+	unsigned int dmaver;
+	unsigned int coreid;
+	unsigned int coremod;
+	unsigned int errcrc;
+	unsigned int errcto;
+	unsigned int irqmin;
 }PCIEC_INFO, *PPCIEC_INFO;
 
 //***************************************************************************************
@@ -235,7 +237,7 @@ unsigned int PCIE_info(unsigned int* params)
 {
 	unsigned int status = 0;
 	unsigned int regVal = 0;
-	unsigned int iaddr = 0;
+	//unsigned int iaddr = 0;
 	unsigned int next_addr = 0;
 	status = GetPciCfgReg(next_addr, NEXT_CAP_POINTER);
 	next_addr &= 0xff;
@@ -319,7 +321,7 @@ unsigned int PCIE_info(unsigned int* params)
 }
 
 static int extdma_sup = 0;
-static ULONG extdma_offset[2] = { 0, 0 };
+static unsigned int extdma_offset[2] = { 0, 0 };
 
 //***************************************************************************************
 unsigned int HostReg(PPCIEC_INFO pInfo)
@@ -353,24 +355,24 @@ unsigned int HostReg(PPCIEC_INFO pInfo)
 	if (blk_cnt > 0xFF)
 		return status;
 	int idxDma = 0;
-	pInfo->errcrc = (ULONG)-1;
-	pInfo->errcto = (ULONG)-1;
+	pInfo->errcrc = (unsigned int)-1;
+	pInfo->errcto = (unsigned int)-1;
 	for (int i = 0; i < blk_cnt; i++)
 	{
-		ULONG offset = (i + 1) * 0x100;
+		unsigned int offset = (i + 1) * 0x100;
 		status = ReadLocalBusReg(regVal, PEFIFOadr_BLOCK_ID + offset, 2);
 		if (regVal != 0X1018) continue;
 		//printf("FIFO_BLOCK_ID[%d] = 0x%X.\n", i, regVal);
 		status = ReadLocalBusReg(regVal, PEFIFOadr_BLOCK_VER + offset, 2);
 		pInfo->dmaver = regVal;
 		status = ReadLocalBusReg(regVal, PEFIFOadr_ERROR_CNT + offset, 2);
-		UCHAR sig = UCHAR(regVal >> 8);
+		unsigned char sig = (unsigned char)(regVal >> 8);
 		if (sig == 0xC1)
 			pInfo->errcrc = regVal & 0xFF;
 		if (sig == 0xC2)
 			pInfo->errcto = regVal & 0xFF;
 		status = ReadLocalBusReg(regVal, PEFIFOadr_IRQ_MODE + offset, 4);
-		sig = UCHAR(regVal >> 24);
+		sig = (unsigned char)(regVal >> 24);
 		//if(sig == 0xA2) // 0xA2 - старая сигнатура
 		if (sig == 0xA4) // 0xA4 - новая сигнатура
 		{
@@ -587,7 +589,7 @@ unsigned int AdmPldWorkAndCheck(PLD_INFO* pPldInfo)
 //***************************************************************************************
 void TetradList(PTRD_INFO info)
 {
-    unsigned int status = 0;
+    //unsigned int status = 0;
 
     //	unsigned int value = 1; // переключить ПЛИС в рабочий режим
 	//	status = WriteRegDataDir(0, 0, ADM2IFnr_DATA, value);
@@ -598,13 +600,13 @@ void TetradList(PTRD_INFO info)
 	int iTetr = 0;
 	for (iTetr = 0; iTetr < MAX_TETRNUM; iTetr++)
 	{
-		status = ReadRegData(0, iTetr, ADM2IFnr_ID, info[iTetr].id);
-		status = ReadRegData(0, iTetr, ADM2IFnr_IDMOD, info[iTetr].mod);
-		status = ReadRegData(0, iTetr, ADM2IFnr_VER, info[iTetr].ver);
-		status = ReadRegData(0, iTetr, ADM2IFnr_TRES, info[iTetr].tres);
-		status = ReadRegData(0, iTetr, ADM2IFnr_FSIZE, info[iTetr].fsize);
-		status = ReadRegData(0, iTetr, ADM2IFnr_FTYPE, info[iTetr].ftype);
-		status = ReadRegDataDir(0, iTetr, ADM2IFnr_STATUS, info[iTetr].status);
+		ReadRegData(0, iTetr, ADM2IFnr_ID, info[iTetr].id);
+		ReadRegData(0, iTetr, ADM2IFnr_IDMOD, info[iTetr].mod);
+		ReadRegData(0, iTetr, ADM2IFnr_VER, info[iTetr].ver);
+		ReadRegData(0, iTetr, ADM2IFnr_TRES, info[iTetr].tres);
+		ReadRegData(0, iTetr, ADM2IFnr_FSIZE, info[iTetr].fsize);
+		ReadRegData(0, iTetr, ADM2IFnr_FTYPE, info[iTetr].ftype);
+		ReadRegDataDir(0, iTetr, ADM2IFnr_STATUS, info[iTetr].status);
 		printf("Tetrad[%d] ID: %04X, MOD: %d, VER: %d.%d\n", iTetr, info[iTetr].id, info[iTetr].mod, info[iTetr].ver >> 8, info[iTetr].ver & 0xff);
 	}
 }
@@ -612,14 +614,14 @@ void TetradList(PTRD_INFO info)
 //***************************************************************************************
 void ErrorDetect()
 {
-	unsigned int status = 0;
+	//unsigned int status = 0;
 
 	unsigned int valueVER = 0;
-	status = ReadRegData(0, 0, ADM2IFnr_VER, valueVER);
+	ReadRegData(0, 0, ADM2IFnr_VER, valueVER);
 	unsigned int valueMOD = 0;
-	status = ReadRegData(0, 0, ADM2IFnr_IDMOD, valueMOD);
+	ReadRegData(0, 0, ADM2IFnr_IDMOD, valueMOD);
 	PCIEC_INFO pcic_info;
-	status = HostReg(&pcic_info);
+	HostReg(&pcic_info);
 	if (pcic_info.coreid == 0x22 && pcic_info.pldver <= 0x104)
 	{
 		printf("\n>>>PLD consists error<<<:\nBug#1455 - FM-module PRESENT is not correct.\nUpdate that PLD!!!\n");
@@ -644,11 +646,11 @@ void ErrorDetect()
 		{
 			printf("\n>>>PLD (DMA channel version = 1.7) consists error<<<:\nBug#2362 - error by DMA restart.\nUpdate that PLD!!!\n");
 		}
-		if (pcic_info.errcrc != (ULONG)-1 && pcic_info.errcrc)
+		if (pcic_info.errcrc != (unsigned int)-1 && pcic_info.errcrc)
 		{
 			printf("\n>>>DMA descriptor CRC error counter = %d !!!<<<\n", pcic_info.errcrc);
 		}
-		if (pcic_info.errcto != (ULONG)-1 && pcic_info.errcto)
+		if (pcic_info.errcto != (unsigned int)-1 && pcic_info.errcto)
 		{
 			printf("\n>>>DMA Completion timeout error counter = %d !!!<<<\n", pcic_info.errcto);
 		}
@@ -748,7 +750,7 @@ unsigned int DmaChannelTest(int tetrNum, int width)
 	else
 	{
 		printf("Memory is Allocated!!!  (%d block, Block size = %d kBytes)\n", blkNum, blkSize / 1024);
-        unsigned int* pBufferZ = (unsigned int*)pBuf;
+        //unsigned int* pBufferZ = (unsigned int*)pBuf;
 
 		//		if(extdma_sup)
 		//			SetIrqMode(1, dmaChan);
@@ -835,7 +837,7 @@ unsigned int DmaChannelTest(int tetrNum, int width)
 					{
 						cnt_err++;
 						if (cnt_err < 10)
-							printf("Error (%d): wr %016I64X : rd %016I64X\n", iBlock, data_wr, data_rd);
+							printf("Error (%d): wr %016llX : rd %016llX\n", iBlock, data_wr, data_rd);
 					}
                     data_wr = ((long long)iBlock + 1) << 40 | 0xA5A50123;
 				}
@@ -853,7 +855,7 @@ unsigned int DmaChannelTest(int tetrNum, int width)
 						{
 							cnt_err++;
 							if (cnt_err < 10)
-								printf("Error (%d, %d): wr %016I64X: rd %016I64X\n", i, iBlock, data_wr, data_rd);
+								printf("Error (%d, %d): wr %016llX: rd %016llX\n", i, iBlock, data_wr, data_rd);
 							data_wr = data_rd;
 						}
                         unsigned int data_h = (unsigned int)(data_wr >> 32);
@@ -874,7 +876,7 @@ unsigned int DmaChannelTest(int tetrNum, int width)
 							{
 								cnt_err++;
 								if (cnt_err < 10)
-									printf("Error (%d, %d): wr %016I64X: rd %016I64X\n", i, iBlock, data_wr, data_rd);
+									printf("Error (%d, %d): wr %016llX: rd %016llX\n", i, iBlock, data_wr, data_rd);
 								data_wrh = data_rd;
 							}
                             unsigned int data_h = (unsigned int)(data_wrh >> 32);
@@ -986,7 +988,7 @@ int main(int argc, char *argv[])
 
 	printf("DeviceID 0x%X\n", DeviceID);
 
-	int g_basemFlg = 0;
+	//int g_basemFlg = 0;
 	unsigned char g_bicrData[256];
 	for (int i = 0; i < 256; i++)
 		g_bicrData[i] = 0;
@@ -996,7 +998,7 @@ int main(int argc, char *argv[])
 	char pldDescrBuf[MAX_STRING_LEN];
 	if (btag == 0x4953)
 	{
-		TCHAR typestr[MAX_STRING_LEN];
+		char typestr[MAX_STRING_LEN];
 		unsigned int ser_num = *(unsigned int*)(g_bicrData + 6);
 		unsigned int base_type = *(unsigned short*)(g_bicrData + 10);
 		unsigned int base_ver = *(g_bicrData + 12);
@@ -1004,20 +1006,20 @@ int main(int argc, char *argv[])
 		printf("%s (0x%04X) : s/n = %d, version = %d.%d\n", typestr, base_type, ser_num, base_ver >> 4, base_ver & 0xF);
 		//GetPldDescription(pldDescrBuf, g_bicrData, 256);
 		//SetDlgItemText(hdlg, IDC_PLDDESCR, pldDescrBuf);
-		g_basemFlg = 1;
+		//g_basemFlg = 1;
 	}
 	else
 	{
 		printf("Base ICR error!!!\n");
 		printf(pldDescrBuf, "Base ICR error!!!");
-		g_basemFlg = 0;
+		//g_basemFlg = 0;
 	}
 	
 	unsigned int SlotNumber;
     unsigned int BusNumber;
     unsigned int DeviceNumber;
 	status = GetLocation(SlotNumber, BusNumber, DeviceNumber);
-	printf("Board location: slot %ld, bus %ld, device %ld\n", SlotNumber, BusNumber, DeviceNumber);
+	printf("Board location: slot %d, bus %d, device %d\n", SlotNumber, BusNumber, DeviceNumber);
 
 	unsigned int pciex_info[4];
 	PCIE_info(pciex_info);
