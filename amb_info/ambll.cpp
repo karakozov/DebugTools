@@ -140,6 +140,41 @@ unsigned int GetDeviceID(unsigned short& DeviceID)
 }
 
 //***************************************************************************************
+unsigned int GetPciCfgReg(unsigned int& RegVal, unsigned int Offset)
+{
+	int ret = 0;
+	AMB_DATA_BUF PciConfigPtr =	{ NULL, sizeof(int), Offset };
+
+	ret = IPC_ioctlDevice(
+		g_hWDM,
+		IOCTL_AMB_GET_BUS_CONFIG,
+		&PciConfigPtr,
+		sizeof(AMB_DATA_BUF),
+		&RegVal,
+		sizeof(int));
+
+	return ret;
+}
+
+//***************************************************************************************
+// Size: 1 - UCHAR, 2 - USHORT, 4 - ULONG
+unsigned int ReadLocalBusReg(unsigned int& RegVal, unsigned int Offset, unsigned int Size)
+{
+	int ret = 0;
+	AMB_DATA_BUF data = { NULL, Size, Offset };
+
+	ret = IPC_ioctlDevice(
+		g_hWDM,
+		IOCTL_AMB_READ_LOCALBUS,
+		&data,
+		sizeof(AMB_DATA_BUF),
+		&RegVal,
+		sizeof(int));
+
+	return ret;
+}
+
+//***************************************************************************************
 unsigned int GetPldStatus(unsigned int& PldStatus, unsigned int PldNum)
 {
 	int ret = 0;
@@ -232,6 +267,23 @@ unsigned int ReadRegDataDir(unsigned int AdmNum, unsigned int TetrNum, unsigned 
 		sizeof(AMB_DATA_REG));
 
 	RegVal = reg_data.Value;
+
+	return ret;
+}
+
+//***************************************************************************************
+unsigned int ReadNvRAM(void* pBuffer, unsigned int BufferSize, unsigned int Offset)
+{
+	int ret = 0;
+	AMB_DATA_BUF NvRAM = { NULL, BufferSize, Offset };
+
+	ret = IPC_ioctlDevice(
+		g_hWDM,
+		IOCTL_AMB_READ_NVRAM,
+		&NvRAM,
+		sizeof(AMB_DATA_BUF),
+		pBuffer,
+		BufferSize);
 
 	return ret;
 }
